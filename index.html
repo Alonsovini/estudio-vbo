@@ -1,0 +1,2247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0D1013">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="Controle financeiro e agenda do Estúdio VBO.">
+<title>Estúdio VBO</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%230D1013%22/><circle cx=%2232%22 cy=%2250%22 r=%2214%22 fill=%22%232DD4BF%22/><rect x=%2254%22 y=%2238%22 width=%2226%22 height=%2224%22 rx=%224%22 fill=%22%23F1F3F4%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ESTÚDIO VBO — design tokens
+   Inspiração: monitor de transmissão / claquete de produção.
+   Tema escuro é o padrão (uso noturno / em locação).
+============================================================ */
+:root{
+  --bg:#F5F4F1;
+  --surface:#FFFFFF;
+  --surface-2:#EFEDE8;
+  --surface-3:#E4E2DD;
+  --text:#1A1D1F;
+  --text-muted:#686F76;
+  --text-faint:#9AA0A6;
+  --border:#E1DFDA;
+  --accent:#0D9488;
+  --accent-ink:#FFFFFF;
+  --accent-soft:rgba(13,148,136,.12);
+  --success:#15803D;
+  --success-soft:rgba(21,128,61,.12);
+  --warning:#B45309;
+  --warning-soft:rgba(180,83,9,.12);
+  --info:#1D4ED8;
+  --info-soft:rgba(29,78,216,.12);
+  --danger:#B91C1C;
+  --danger-soft:rgba(185,28,28,.12);
+  --shadow:0 1px 2px rgba(20,20,15,.06), 0 6px 20px rgba(20,20,15,.06);
+  --radius-sm:10px;
+  --radius:16px;
+  --radius-lg:22px;
+  --font-display:'Big Shoulders Display',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1013;
+    --surface:#171B1F;
+    --surface-2:#1E2328;
+    --surface-3:#262C32;
+    --text:#F1F3F4;
+    --text-muted:#9AA3AB;
+    --text-faint:#69727B;
+    --border:#282F36;
+    --accent:#2DD4BF;
+    --accent-ink:#06231F;
+    --accent-soft:rgba(45,212,191,.14);
+    --success:#34D399;
+    --success-soft:rgba(52,211,153,.14);
+    --warning:#FBBF24;
+    --warning-soft:rgba(251,191,36,.14);
+    --info:#60A5FA;
+    --info-soft:rgba(96,165,250,.14);
+    --danger:#F87171;
+    --danger-soft:rgba(248,113,113,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1013;
+  --surface:#171B1F;
+  --surface-2:#1E2328;
+  --surface-3:#262C32;
+  --text:#F1F3F4;
+  --text-muted:#9AA3AB;
+  --text-faint:#69727B;
+  --border:#282F36;
+  --accent:#2DD4BF;
+  --accent-ink:#06231F;
+  --accent-soft:rgba(45,212,191,.14);
+  --success:#34D399;
+  --success-soft:rgba(52,211,153,.14);
+  --warning:#FBBF24;
+  --warning-soft:rgba(251,191,36,.14);
+  --info:#60A5FA;
+  --info-soft:rgba(96,165,250,.14);
+  --danger:#F87171;
+  --danger-soft:rgba(248,113,113,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+}
+:root[data-theme="light"]{
+  --bg:#F5F4F1;--surface:#FFFFFF;--surface-2:#EFEDE8;--surface-3:#E4E2DD;
+  --text:#1A1D1F;--text-muted:#686F76;--text-faint:#9AA0A6;--border:#E1DFDA;
+  --accent:#0D9488;--accent-ink:#FFFFFF;--accent-soft:rgba(13,148,136,.12);
+  --success:#15803D;--success-soft:rgba(21,128,61,.12);
+  --warning:#B45309;--warning-soft:rgba(180,83,9,.12);
+  --info:#1D4ED8;--info-soft:rgba(29,78,216,.12);
+  --danger:#B91C1C;--danger-soft:rgba(185,28,28,.12);
+  --shadow:0 1px 2px rgba(20,20,15,.06), 0 6px 20px rgba(20,20,15,.06);
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  font-size:15px;line-height:1.5;
+}
+button,input,select,textarea{font-family:inherit;color:inherit;}
+button{cursor:pointer;}
+h1,h2,h3{margin:0;font-family:var(--font-display);font-weight:700;letter-spacing:.01em;}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+a{color:var(--accent);}
+
+.label{
+  font-family:var(--font-display);font-weight:600;font-size:12.5px;
+  text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);
+}
+
+#app{
+  max-width:520px;margin:0 auto;min-height:100%;
+  display:flex;flex-direction:column;position:relative;
+  background:var(--bg);
+}
+
+/* ---------- topbar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:30;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(14px + env(safe-area-inset-top)) 18px 14px;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:9px;}
+.brand-mark{
+  width:30px;height:30px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:var(--shadow);
+}
+.brand-mark span{width:9px;height:9px;border-radius:50%;background:var(--accent-ink);}
+.brand h1{font-size:21px;line-height:1;}
+.brand h1 small{display:block;font-family:var(--font-body);font-weight:500;font-size:10.5px;letter-spacing:.08em;color:var(--text-muted);text-transform:uppercase;margin-top:3px;}
+.icon-btn{
+  width:40px;height:40px;border-radius:12px;border:1px solid var(--border);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;transition:transform .15s ease;
+}
+.icon-btn:active{transform:scale(.92);}
+
+/* ---------- views ---------- */
+main.view{display:none;flex:1;padding:16px 16px calc(104px + env(safe-area-inset-bottom));animation:fade-in .18s ease;}
+main.view.active{display:block;}
+@keyframes fade-in{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 10px;}
+.section-head:first-child{margin-top:2px;}
+.section-head h2{font-size:15px;}
+.section-head .count{font-family:var(--font-mono);font-size:12px;color:var(--text-faint);}
+
+/* ---------- month nav ---------- */
+.month-nav{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:6px 6px 6px 16px;box-shadow:var(--shadow);
+}
+.month-nav .month-label{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:.01em;}
+.month-nav .month-arrows{display:flex;gap:4px;}
+.month-nav button{
+  width:38px;height:38px;border-radius:10px;border:none;background:var(--surface-2);
+  font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text);
+}
+.month-nav button:active{background:var(--surface-3);}
+.month-nav .today-btn{
+  font-family:var(--font-body);font-size:11.5px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--accent);background:none;width:auto;padding:0 8px;
+}
+
+/* ---------- stat cards ---------- */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:15px;box-shadow:var(--shadow);
+}
+.stat-card{grid-column:span 1;}
+.stat-card.wide{grid-column:span 2;}
+.stat-card .label{display:block;margin-bottom:6px;}
+.stat-card .value{font-family:var(--font-mono);font-size:23px;font-weight:600;letter-spacing:-.01em;}
+.stat-card .sub{font-size:12px;color:var(--text-muted);margin-top:3px;}
+.stat-card.accent{background:linear-gradient(155deg, var(--accent-soft), var(--surface) 65%);border-color:var(--accent);}
+.stat-card.accent .value{color:var(--accent);}
+.proj-row{display:flex;gap:10px;margin-top:10px;}
+.proj-row .card{flex:1;padding:13px;}
+.proj-row .value{font-size:18px;}
+.proj-conservative .value{color:var(--text);}
+.proj-optimistic .value{color:var(--success);}
+
+/* ---------- list rows ---------- */
+.list{display:flex;flex-direction:column;gap:8px;}
+.row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:13px 14px;box-shadow:var(--shadow);
+}
+.row:active{background:var(--surface-2);}
+.row .stripe{width:4px;align-self:stretch;border-radius:3px;flex-shrink:0;}
+.row .stripe.confirmado{background:var(--info);}
+.row .stripe.pendente{background:var(--warning);}
+.row .stripe.recebido{background:var(--success);}
+.row .stripe.despesa{background:var(--danger);}
+.row .stripe.paga{background:var(--success);}
+.row-body{flex:1;min-width:0;}
+.row-title{font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row-sub{font-size:12.5px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.row-value{font-family:var(--font-mono);font-weight:600;font-size:14.5px;flex-shrink:0;text-align:right;}
+.row-value.neg{color:var(--danger);}
+.row-value.pos{color:var(--success);}
+.empty-state{
+  text-align:center;padding:36px 20px;color:var(--text-faint);
+  border:1.5px dashed var(--border);border-radius:var(--radius);font-size:13.5px;
+}
+
+/* ---------- badges ---------- */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;flex-shrink:0;
+}
+.badge.confirmado{background:var(--info-soft);color:var(--info);}
+.badge.pendente{background:var(--warning-soft);color:var(--warning);}
+.badge.recebido{background:var(--success-soft);color:var(--success);}
+.badge.paga{background:var(--success-soft);color:var(--success);}
+.badge.aberta{background:var(--warning-soft);color:var(--warning);}
+.badge.vencida{background:var(--danger-soft);color:var(--danger);}
+.badge.pode-comprar{background:var(--success-soft);color:var(--success);}
+.badge.previsao{background:var(--info-soft);color:var(--info);}
+.badge.sem-dados{background:var(--surface-3);color:var(--text-muted);}
+
+/* ---------- alert banner ---------- */
+.alert{
+  display:flex;align-items:flex-start;gap:10px;padding:13px 14px;border-radius:var(--radius);
+  background:var(--danger-soft);border:1px solid var(--danger);color:var(--danger);
+  font-size:13px;margin-bottom:14px;
+}
+.alert strong{display:block;font-size:13.5px;margin-bottom:2px;color:var(--text);}
+.alert ul{margin:4px 0 0;padding-left:16px;}
+
+/* ---------- buttons ---------- */
+.btn{
+  min-height:48px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--surface);font-weight:600;font-size:14px;padding:0 18px;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  width:100%;transition:transform .1s ease;
+}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+.btn-ghost{background:transparent;}
+.btn-danger{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+.btn-sm{min-height:40px;font-size:13px;padding:0 14px;width:auto;}
+.btn-row{display:flex;gap:10px;}
+.btn-row .btn{flex:1;}
+.add-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;border-radius:var(--radius-sm);border:1.5px dashed var(--border);
+  background:transparent;color:var(--accent);font-weight:600;font-size:13.5px;width:100%;margin-top:10px;
+}
+.add-btn:active{background:var(--accent-soft);}
+
+/* ---------- segmented control ---------- */
+.segmented{display:flex;background:var(--surface-2);border-radius:var(--radius-sm);padding:3px;gap:3px;}
+.segmented button{
+  flex:1;border:none;background:transparent;padding:9px 2px;border-radius:8px;
+  font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.segmented button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
+
+/* ---------- gráfico de barras (despesas por categoria) ---------- */
+.chart-row{display:flex;align-items:center;gap:9px;padding:6px 0;}
+.chart-label{width:34%;flex-shrink:0;font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chart-track{flex:1;height:18px;border-radius:5px;background:var(--surface-2);overflow:hidden;}
+.chart-fill{display:block;height:100%;border-radius:0 5px 5px 0;}
+.chart-value{width:80px;flex-shrink:0;text-align:right;font-size:11.5px;font-weight:600;}
+
+/* ---------- calendar ---------- */
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-top:14px;}
+.cal-weekdays div{text-align:center;font-size:10.5px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;padding-bottom:6px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-day{
+  aspect-ratio:1/1;border-radius:11px;background:var(--surface);border:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
+  font-family:var(--font-mono);font-size:13px;gap:3px;
+}
+.cal-day.empty{background:transparent;border-color:transparent;}
+.cal-day.today{border-color:var(--accent);border-width:1.5px;}
+.cal-day.today .num-txt{color:var(--accent);font-weight:700;}
+.cal-day.has-conflict{border-color:var(--danger);box-shadow:0 0 0 1.5px var(--danger) inset;}
+.cal-day .dots{display:flex;gap:2px;position:absolute;bottom:6px;}
+.cal-day .dots span{width:5px;height:5px;border-radius:50%;}
+.cal-day .conflict-flag{position:absolute;top:3px;right:3px;font-size:9px;}
+.cal-day:active{background:var(--surface-2);}
+
+/* ---------- bottom nav ---------- */
+.bottomnav{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  display:flex;justify-content:center;
+}
+.bottomnav-inner{
+  width:100%;max-width:520px;display:flex;background:color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+}
+.bottomnav button{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;padding:8px 2px 6px;border-radius:12px;color:var(--text-faint);
+}
+.bottomnav button .icon{font-size:20px;line-height:1;}
+.bottomnav button .txt{font-size:10px;font-weight:600;letter-spacing:.02em;}
+.bottomnav button.active{color:var(--accent);}
+.bottomnav button:active{background:var(--surface-2);}
+
+/* ---------- modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(8,9,10,.55);z-index:60;
+  display:none;align-items:flex-end;justify-content:center;
+}
+.modal-overlay.active{display:flex;}
+.modal-sheet{
+  width:100%;max-width:520px;background:var(--surface);border-radius:22px 22px 0 0;
+  padding:10px 20px calc(22px + env(safe-area-inset-bottom));max-height:90vh;overflow-y:auto;
+  animation:slide-up .22s cubic-bezier(.32,.72,0,1);border-top:1px solid var(--border);
+}
+@keyframes slide-up{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--surface-3);margin:8px auto 14px;}
+.modal-sheet h3{font-size:22px;margin-bottom:16px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.field input[type=text],.field input[type=number],.field input[type=date],.field select,.field textarea{
+  width:100%;min-height:48px;border-radius:12px;border:1px solid var(--border);
+  background:var(--surface-2);padding:0 14px;font-size:15px;color:var(--text);
+}
+.field textarea{padding:12px 14px;min-height:70px;resize:vertical;font-family:inherit;}
+.field .hint{font-size:11.5px;color:var(--text-faint);margin-top:5px;}
+.status-picker{display:flex;gap:8px;}
+.status-picker label{
+  flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+  min-height:46px;border-radius:12px;border:1.5px solid var(--border);font-size:12.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);position:relative;
+}
+.status-picker input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;}
+.status-picker label.opt-confirmado.checked{border-color:var(--info);background:var(--info-soft);color:var(--info);}
+.status-picker label.opt-pendente.checked{border-color:var(--warning);background:var(--warning-soft);color:var(--warning);}
+.status-picker label.opt-recebido.checked{border-color:var(--success);background:var(--success-soft);color:var(--success);}
+.status-picker label.opt-baixa.checked{border-color:var(--success);background:var(--success-soft);color:var(--success);}
+.status-picker label.opt-media.checked{border-color:var(--warning);background:var(--warning-soft);color:var(--warning);}
+.status-picker label.opt-alta.checked{border-color:var(--danger);background:var(--danger-soft);color:var(--danger);}
+.status-picker label.opt-vinicius.checked{border-color:var(--info);background:var(--info-soft);color:var(--info);}
+.status-picker label.opt-bia.checked{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+.status-picker label.opt-ambos.checked{border-color:var(--success);background:var(--success-soft);color:var(--success);}
+.badge.vinicius{background:var(--info-soft);color:var(--info);}
+.badge.bia{background:var(--accent-soft);color:var(--accent);}
+.badge.ambos{background:var(--success-soft);color:var(--success);}
+.check-row{display:flex;align-items:center;gap:10px;min-height:46px;}
+.check-row input{width:20px;height:20px;accent-color:var(--accent);}
+.check-row span{font-size:14px;font-weight:500;}
+.field-error{color:var(--danger);font-size:12px;margin-top:5px;display:none;}
+.field.has-error input,.field.has-error select{border-color:var(--danger);}
+.field.has-error .field-error{display:block;}
+
+/* ---------- ajustes ---------- */
+.settings-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:15px 16px;box-shadow:var(--shadow);margin-bottom:10px;
+}
+.settings-row .txt strong{display:block;font-size:14px;}
+.settings-row .txt span{display:block;font-size:12px;color:var(--text-muted);margin-top:2px;}
+.switch{position:relative;width:48px;height:28px;flex-shrink:0;}
+.switch input{opacity:0;width:100%;height:100%;position:absolute;margin:0;cursor:pointer;z-index:1;}
+.switch .track{position:absolute;inset:0;background:var(--surface-3);border-radius:99px;transition:background .18s;}
+.switch .thumb{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .18s;}
+.switch input:checked ~ .track{background:var(--accent);}
+.switch input:checked ~ .thumb{transform:translateX(20px);}
+.footer-note{text-align:center;color:var(--text-faint);font-size:11.5px;padding:20px 10px 4px;line-height:1.6;}
+
+/* ---------- login compartilhado ---------- */
+.login-screen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px;}
+.login-screen.hidden{display:none;}
+.login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:30px 26px;box-shadow:var(--shadow);}
+.login-mark{width:56px;height:56px;border-radius:16px;background:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+.login-mark span{width:16px;height:16px;border-radius:50%;background:var(--accent-ink);}
+#app.hidden{display:none;}
+
+::-webkit-scrollbar{width:0;height:0;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
+</style>
+</head>
+<body>
+
+<!-- ===================== TELA DE LOGIN (acesso compartilhado) ===================== -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-mark"><span></span></div>
+    <h2 style="text-align:center;font-size:24px;margin-bottom:4px;">Estúdio VBO</h2>
+    <p style="text-align:center;color:var(--text-muted);font-size:13px;margin:0 0 22px;">Acesso compartilhado</p>
+    <form id="form-login" novalidate>
+      <div class="field" id="field-login-senha">
+        <label for="login-senha">Senha de acesso</label>
+        <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password">
+        <div class="field-error">Senha incorreta. Tente novamente.</div>
+      </div>
+      <button type="submit" class="btn btn-primary" id="btn-login" style="margin-top:4px;">Entrar</button>
+    </form>
+    <p id="login-status" style="text-align:center;color:var(--text-faint);font-size:12px;margin-top:16px;min-height:16px;"></p>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"><span></span></div>
+      <h1>Estúdio VBO<small>Financeiro &amp; agenda</small></h1>
+    </div>
+    <button class="icon-btn" id="btn-theme" title="Alternar tema" aria-label="Alternar tema">🌙</button>
+  </header>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <main class="view active" id="view-dashboard">
+    <div class="month-nav" id="dash-month-nav"></div>
+
+    <div id="dash-conflict-slot"></div>
+
+    <div class="stats-grid">
+      <div class="card stat-card accent wide">
+        <span class="label">Saldo atual em caixa</span>
+        <div class="value num" id="dash-saldo">R$ 0,00</div>
+        <div class="sub" id="dash-saldo-sub">considerando todo o histórico recebido/pago</div>
+      </div>
+      <div class="card stat-card">
+        <span class="label">A receber · confirmado</span>
+        <div class="value num" id="dash-confirmado">R$ 0,00</div>
+      </div>
+      <div class="card stat-card">
+        <span class="label">A receber · pendente</span>
+        <div class="value num" id="dash-pendente">R$ 0,00</div>
+      </div>
+      <div class="card stat-card wide">
+        <span class="label">Despesas do mês</span>
+        <div class="value num" id="dash-despesas">R$ 0,00</div>
+        <div class="sub" id="dash-despesas-sub">—</div>
+      </div>
+    </div>
+
+    <div class="proj-row">
+      <div class="card proj-conservative">
+        <span class="label">Projeção conservadora</span>
+        <div class="value num" id="dash-proj-cons">R$ 0,00</div>
+        <div class="sub">só o que é certo</div>
+      </div>
+      <div class="card proj-optimistic">
+        <span class="label">Projeção otimista</span>
+        <div class="value num" id="dash-proj-otim">R$ 0,00</div>
+        <div class="sub">incluindo pendentes</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;">
+      <div><span class="label" style="display:block;margin-bottom:3px;">Patrimônio investido</span><span style="font-size:11px;color:var(--text-faint);">fora do saldo disponível</span></div>
+      <div class="value num" id="dash-investido" style="font-size:17px;">R$ 0,00</div>
+    </div>
+
+    <div class="section-head"><h2>Próximos recebimentos</h2></div>
+    <div class="list" id="dash-list-receber"></div>
+
+    <div class="section-head"><h2>Próximas contas a pagar</h2></div>
+    <div class="list" id="dash-list-pagar"></div>
+  </main>
+
+  <!-- ===================== AGENDA ===================== -->
+  <main class="view" id="view-agenda">
+    <div class="month-nav" id="agenda-month-nav"></div>
+    <div id="agenda-conflict-slot" style="margin-top:14px;"></div>
+    <div class="cal-weekdays"><div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div></div>
+    <div class="cal-grid" id="agenda-grid"></div>
+    <button class="add-btn" id="btn-add-evento-agenda">＋ Novo evento / trampo</button>
+    <div class="section-head"><h2>Eventos do mês</h2><span class="count" id="agenda-count"></span></div>
+    <div class="list" id="agenda-list"></div>
+  </main>
+
+  <!-- ===================== FINANCEIRO ===================== -->
+  <main class="view" id="view-financeiro">
+    <div class="month-nav" id="fin-month-nav"></div>
+    <div class="segmented" style="margin-top:14px;">
+      <button data-fin-tab="receitas" class="active">Receitas</button>
+      <button data-fin-tab="despesas">Despesas</button>
+      <button data-fin-tab="investimentos">Investir</button>
+      <button data-fin-tab="compras">Compras</button>
+    </div>
+
+    <div id="fin-panel-receitas">
+      <div class="section-head"><h2>Receitas do mês</h2><span class="count" id="fin-receitas-count"></span></div>
+      <div class="list" id="fin-list-receitas"></div>
+      <button class="add-btn" id="btn-add-receita">＋ Nova receita / projeto</button>
+    </div>
+
+    <div id="fin-panel-despesas" style="display:none;">
+      <div id="fin-despesas-chart"></div>
+      <div class="section-head" style="margin-top:0;"><h2>Despesas do mês</h2><span class="count" id="fin-despesas-count"></span></div>
+      <div class="list" id="fin-list-despesas"></div>
+      <button class="add-btn" id="btn-add-despesa">＋ Nova despesa</button>
+      <button class="add-btn" id="btn-gerenciar-fixas">🔁 Gerenciar despesas fixas recorrentes</button>
+    </div>
+
+    <div id="fin-panel-investimentos" style="display:none;">
+      <div class="card stat-card accent" style="margin-bottom:14px;">
+        <span class="label">Total investido (registrado)</span>
+        <div class="value num" id="fin-total-investido">R$ 0,00</div>
+        <div class="sub">não entra no saldo em caixa nem nas contas de compras futuras</div>
+      </div>
+      <div class="section-head" style="margin-top:0;"><h2>Seus investimentos</h2><span class="count" id="fin-investimentos-count"></span></div>
+      <div class="list" id="fin-list-investimentos"></div>
+      <button class="add-btn" id="btn-add-investimento">＋ Novo investimento</button>
+    </div>
+
+    <div id="fin-panel-compras" style="display:none;">
+      <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px;">A estimativa usa seu saldo em caixa e a média de receitas − despesas dos últimos meses. Dinheiro investido nunca é contado aqui.</p>
+      <div class="section-head" style="margin-top:0;"><h2>Lista de compras</h2><span class="count" id="fin-compras-count"></span></div>
+      <div class="list" id="fin-list-compras"></div>
+      <button class="add-btn" id="btn-add-compra">＋ Novo item para comprar</button>
+      <div id="fin-compras-compradas-wrap" style="display:none;">
+        <div class="section-head"><h2>Já comprados</h2></div>
+        <div class="list" id="fin-list-compras-compradas"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================== AJUSTES ===================== -->
+  <main class="view" id="view-ajustes">
+    <div class="section-head" style="margin-top:2px;"><h2>Conta</h2></div>
+    <div class="settings-row">
+      <div class="txt"><strong id="sync-status-txt">Conectando…</strong><span>Dados compartilhados com Vinicius e Bia em tempo real</span></div>
+    </div>
+    <button class="btn" id="btn-logout" style="margin-bottom:14px;">Sair</button>
+
+    <div class="section-head"><h2>Aparência</h2></div>
+    <div class="settings-row">
+      <div class="txt"><strong>Modo escuro</strong><span>Ideal para uso à noite ou em locação</span></div>
+      <label class="switch"><input type="checkbox" id="toggle-dark"><span class="track"></span><span class="thumb"></span></label>
+    </div>
+
+    <div class="section-head"><h2>Caixa</h2></div>
+    <div class="card">
+      <div class="field" style="margin-bottom:10px;">
+        <label for="input-saldo-inicial">Saldo inicial em caixa</label>
+        <input type="number" step="0.01" id="input-saldo-inicial" placeholder="0,00">
+        <div class="hint">Ponto de partida usado para calcular o saldo atual — compartilhado entre vocês dois.</div>
+      </div>
+      <button class="btn btn-primary" id="btn-salvar-saldo">Salvar saldo inicial</button>
+    </div>
+
+    <div class="section-head"><h2>Seus dados</h2></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+      <div class="btn-row">
+        <button class="btn" id="btn-export">⬇ Exportar backup</button>
+        <button class="btn" id="btn-import-trigger">⬆ Importar backup</button>
+      </div>
+      <input type="file" id="input-import" accept="application/json" style="display:none;">
+      <button class="btn btn-danger" id="btn-clear-all">Apagar todos os dados compartilhados</button>
+    </div>
+
+    <p class="footer-note">Os dados ficam salvos na nuvem (Firebase) e sincronizam automaticamente entre os aparelhos de vocês dois.<br>"Exportar backup" ainda é recomendado de vez em quando, como cópia de segurança extra.</p>
+  </main>
+
+  <nav class="bottomnav">
+    <div class="bottomnav-inner">
+      <button data-tab="dashboard" class="active"><span class="icon">📊</span><span class="txt">Painel</span></button>
+      <button data-tab="agenda"><span class="icon">📅</span><span class="txt">Agenda</span></button>
+      <button data-tab="financeiro"><span class="icon">💰</span><span class="txt">Financeiro</span></button>
+      <button data-tab="ajustes"><span class="icon">⚙️</span><span class="txt">Ajustes</span></button>
+    </div>
+  </nav>
+</div>
+
+<!-- ===================== MODAL: EVENTO ===================== -->
+<div class="modal-overlay" id="modal-evento">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="modal-evento-title">Novo evento</h3>
+    <form id="form-evento" novalidate>
+      <input type="hidden" id="evento-id">
+      <div class="field" id="field-evento-titulo">
+        <label for="evento-titulo">Nome do trabalho</label>
+        <input type="text" id="evento-titulo" placeholder="Ex: Casamento Ana &amp; Rafa, Ensaio corporativo…">
+        <div class="field-error">Informe o nome do trabalho.</div>
+      </div>
+      <div class="field">
+        <label for="evento-cliente">Cliente</label>
+        <input type="text" id="evento-cliente" placeholder="Ex: Ana Ribeiro">
+      </div>
+      <div class="field" id="field-evento-data">
+        <label for="evento-data">Data</label>
+        <input type="date" id="evento-data">
+        <div class="field-error">Escolha uma data.</div>
+      </div>
+      <div class="field" id="field-evento-valor">
+        <label for="evento-valor">Valor (R$)</label>
+        <input type="number" step="0.01" min="0" id="evento-valor" placeholder="0,00">
+        <div class="field-error">Informe um valor válido.</div>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <div class="status-picker">
+          <label class="opt-confirmado"><input type="radio" name="evento-status" value="confirmado">Confirmado</label>
+          <label class="opt-pendente"><input type="radio" name="evento-status" value="pendente">Pendente</label>
+          <label class="opt-recebido"><input type="radio" name="evento-status" value="recebido">Recebido</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Quem vai</label>
+        <div class="status-picker">
+          <label class="opt-vinicius"><input type="radio" name="evento-responsavel" value="vinicius">Vinicius</label>
+          <label class="opt-bia"><input type="radio" name="evento-responsavel" value="bia">Bia</label>
+          <label class="opt-ambos"><input type="radio" name="evento-responsavel" value="ambos">Nós dois</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="evento-local">Local (opcional)</label>
+        <input type="text" id="evento-local" placeholder="Ex: Espaço Villa, São Paulo">
+      </div>
+      <div class="field">
+        <label for="evento-notas">Notas (opcional)</label>
+        <textarea id="evento-notas" placeholder="Equipamentos, equipe, observações…"></textarea>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button type="button" class="btn btn-danger" id="btn-evento-excluir" style="display:none;">Excluir</button>
+        <button type="button" class="btn btn-ghost" id="btn-evento-cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: DESPESA ===================== -->
+<div class="modal-overlay" id="modal-despesa">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="modal-despesa-title">Nova despesa</h3>
+    <form id="form-despesa" novalidate>
+      <input type="hidden" id="despesa-id">
+      <div class="field" id="field-despesa-descricao">
+        <label for="despesa-descricao">Descrição</label>
+        <input type="text" id="despesa-descricao" placeholder="Ex: Aluguel, internet, seguro do equipamento…">
+        <div class="field-error">Informe uma descrição.</div>
+      </div>
+      <div class="field">
+        <label for="despesa-categoria">Categoria</label>
+        <input type="text" id="despesa-categoria" list="lista-categorias" placeholder="Ex: Moradia">
+        <datalist id="lista-categorias">
+          <option value="Moradia"><option value="Alimentação"><option value="Transporte">
+          <option value="Equipamento"><option value="Assinaturas"><option value="Software">
+          <option value="Impostos"><option value="Saúde"><option value="Outros">
+        </datalist>
+      </div>
+      <div class="field" id="field-despesa-valor">
+        <label for="despesa-valor">Valor (R$)</label>
+        <input type="number" step="0.01" min="0" id="despesa-valor" placeholder="0,00">
+        <div class="field-error">Informe um valor válido.</div>
+      </div>
+      <div class="field" id="field-despesa-vencimento">
+        <label for="despesa-vencimento">Vencimento</label>
+        <input type="date" id="despesa-vencimento">
+        <div class="field-error">Escolha uma data de vencimento.</div>
+      </div>
+      <div class="field">
+        <label>Tipo</label>
+        <div class="status-picker">
+          <label class="opt-confirmado"><input type="radio" name="despesa-tipo" value="fixa">Fixa</label>
+          <label class="opt-pendente"><input type="radio" name="despesa-tipo" value="variavel">Variável</label>
+        </div>
+      </div>
+      <div class="field">
+        <label class="check-row" for="despesa-paga" style="text-transform:none;font-size:14px;color:var(--text);">
+          <input type="checkbox" id="despesa-paga"><span>Já paga</span>
+        </label>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button type="button" class="btn btn-danger" id="btn-despesa-excluir" style="display:none;">Excluir</button>
+        <button type="button" class="btn btn-ghost" id="btn-despesa-cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: INVESTIMENTO ===================== -->
+<div class="modal-overlay" id="modal-investimento">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="modal-investimento-title">Novo investimento</h3>
+    <form id="form-investimento" novalidate>
+      <input type="hidden" id="investimento-id">
+      <div class="field" id="field-investimento-nome">
+        <label for="investimento-nome">Nome / descrição</label>
+        <input type="text" id="investimento-nome" placeholder="Ex: Reserva de emergência, Tesouro Selic…">
+        <div class="field-error">Informe um nome.</div>
+      </div>
+      <div class="field" id="field-investimento-valor">
+        <label for="investimento-valor">Valor (R$)</label>
+        <input type="number" step="0.01" min="0" id="investimento-valor" placeholder="0,00">
+        <div class="field-error">Informe um valor válido.</div>
+      </div>
+      <div class="field">
+        <label for="investimento-data">Data do aporte</label>
+        <input type="date" id="investimento-data">
+      </div>
+      <div class="field">
+        <label for="investimento-tipo">Tipo</label>
+        <input type="text" id="investimento-tipo" list="lista-tipos-investimento" placeholder="Ex: Reserva de emergência">
+        <datalist id="lista-tipos-investimento">
+          <option value="Reserva de emergência"><option value="Renda fixa">
+          <option value="Ações / FIIs"><option value="Cripto"><option value="Outro">
+        </datalist>
+      </div>
+      <div class="field">
+        <label for="investimento-notas">Notas (opcional)</label>
+        <textarea id="investimento-notas" placeholder="Corretora, objetivo, observações…"></textarea>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button type="button" class="btn btn-danger" id="btn-investimento-excluir" style="display:none;">Excluir</button>
+        <button type="button" class="btn btn-ghost" id="btn-investimento-cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: COMPRA FUTURA ===================== -->
+<div class="modal-overlay" id="modal-compra">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="modal-compra-title">Novo item para comprar</h3>
+    <form id="form-compra" novalidate>
+      <input type="hidden" id="compra-id">
+      <div class="field" id="field-compra-nome">
+        <label for="compra-nome">Item</label>
+        <input type="text" id="compra-nome" placeholder="Ex: Lente 35mm f/1.4, Gravador de áudio…">
+        <div class="field-error">Informe o nome do item.</div>
+      </div>
+      <div class="field">
+        <label for="compra-categoria">Categoria</label>
+        <input type="text" id="compra-categoria" list="lista-categorias-equip" placeholder="Ex: Lente">
+        <datalist id="lista-categorias-equip">
+          <option value="Câmera"><option value="Lente"><option value="Áudio">
+          <option value="Iluminação"><option value="Drone"><option value="Estabilização">
+          <option value="Armazenamento"><option value="Outro">
+        </datalist>
+      </div>
+      <div class="field" id="field-compra-valor">
+        <label for="compra-valor">Valor estimado (R$)</label>
+        <input type="number" step="0.01" min="0" id="compra-valor" placeholder="0,00">
+        <div class="field-error">Informe um valor válido.</div>
+      </div>
+      <div class="field">
+        <label>Prioridade</label>
+        <div class="status-picker">
+          <label class="opt-baixa"><input type="radio" name="compra-prioridade" value="baixa">Baixa</label>
+          <label class="opt-media"><input type="radio" name="compra-prioridade" value="media">Média</label>
+          <label class="opt-alta"><input type="radio" name="compra-prioridade" value="alta">Alta</label>
+        </div>
+      </div>
+      <div class="field">
+        <label class="check-row" for="compra-comprado" style="text-transform:none;font-size:14px;color:var(--text);">
+          <input type="checkbox" id="compra-comprado"><span>Já comprado</span>
+        </label>
+      </div>
+      <div class="field">
+        <label for="compra-notas">Notas (opcional)</label>
+        <textarea id="compra-notas" placeholder="Modelo, loja, observações…"></textarea>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button type="button" class="btn btn-danger" id="btn-compra-excluir" style="display:none;">Excluir</button>
+        <button type="button" class="btn btn-ghost" id="btn-compra-cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: LISTA DE DESPESAS FIXAS ===================== -->
+<div class="modal-overlay" id="modal-fixas-lista">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3>Despesas fixas recorrentes</h3>
+    <p style="font-size:12.5px;color:var(--text-muted);margin:-8px 0 14px;">Cada uma gera automaticamente uma conta todo mês (aluguel, convênio, carro, moto, parcela do apê…). Edite ou exclua cada mês individualmente na lista de despesas se um valor mudar.</p>
+    <div class="list" id="fixas-lista-list" style="margin-bottom:14px;"></div>
+    <button class="btn btn-primary" id="btn-fixa-nova">＋ Nova despesa fixa</button>
+    <button class="btn btn-ghost" id="btn-fixas-fechar" style="margin-top:10px;">Fechar</button>
+  </div>
+</div>
+
+<!-- ===================== MODAL: FORM DESPESA FIXA ===================== -->
+<div class="modal-overlay" id="modal-fixa-form">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="modal-fixa-form-title">Nova despesa fixa</h3>
+    <form id="form-fixa" novalidate>
+      <input type="hidden" id="fixa-id">
+      <div class="field" id="field-fixa-descricao">
+        <label for="fixa-descricao">Descrição</label>
+        <input type="text" id="fixa-descricao" placeholder="Ex: Aluguel, convênio, financiamento do carro…">
+        <div class="field-error">Informe uma descrição.</div>
+      </div>
+      <div class="field">
+        <label for="fixa-categoria">Categoria</label>
+        <input type="text" id="fixa-categoria" list="lista-categorias" placeholder="Ex: Moradia">
+      </div>
+      <div class="field" id="field-fixa-valor">
+        <label for="fixa-valor">Valor (R$)</label>
+        <input type="number" step="0.01" min="0" id="fixa-valor" placeholder="0,00">
+        <div class="field-error">Informe um valor válido.</div>
+      </div>
+      <div class="field" id="field-fixa-dia">
+        <label for="fixa-dia">Dia de vencimento (1–31)</label>
+        <input type="number" min="1" max="31" step="1" id="fixa-dia" placeholder="Ex: 10">
+        <div class="hint">Se o mês não tiver esse dia, usamos o último dia do mês.</div>
+        <div class="field-error">Informe um dia entre 1 e 31.</div>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button type="button" class="btn btn-danger" id="btn-fixa-excluir" style="display:none;">Excluir</button>
+        <button type="button" class="btn btn-ghost" id="btn-fixa-cancelar">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: DIA (agenda) ===================== -->
+<div class="modal-overlay" id="modal-dia">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="modal-dia-title">Dia</h3>
+    <div class="list" id="modal-dia-list" style="margin-bottom:14px;"></div>
+    <button class="btn btn-primary" id="btn-dia-novo-evento">＋ Novo evento neste dia</button>
+    <button class="btn btn-ghost" id="btn-dia-fechar" style="margin-top:10px;">Fechar</button>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CONFIRMAÇÃO ===================== -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="confirm-title">Confirmar</h3>
+    <p id="confirm-msg" style="color:var(--text-muted);font-size:14px;margin:-6px 0 18px;"></p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="btn-confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirm-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   ESTADO / PERSISTÊNCIA
+============================================================ */
+var STORAGE_KEY = 'estudiovbo_v1';
+var LEGACY_STORAGE_KEY = 'freelaflow_v1';
+var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+var MESES_ABR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function defaultState(){
+  return { saldoInicial:0, eventos:[], despesas:[], despesasFixas:[], investimentos:[], comprasFuturas:[], theme:null };
+}
+
+function normalizeState(parsed){
+  var st = defaultState();
+  for(var k in parsed){ st[k] = parsed[k]; }
+  if(!Array.isArray(st.eventos)) st.eventos = [];
+  if(!Array.isArray(st.despesas)) st.despesas = [];
+  if(!Array.isArray(st.despesasFixas)) st.despesasFixas = [];
+  if(!Array.isArray(st.investimentos)) st.investimentos = [];
+  if(!Array.isArray(st.comprasFuturas)) st.comprasFuturas = [];
+  return st;
+}
+
+function loadState(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return normalizeState(JSON.parse(raw));
+    // Migração de uma instalação anterior (FreelaFlow) para o Estúdio VBO,
+    // preservando os dados já cadastrados neste navegador.
+    var legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if(legacy){
+      var migrated = normalizeState(JSON.parse(legacy));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      return migrated;
+    }
+    return defaultState();
+  }catch(e){
+    console.error('Estúdio VBO: falha ao ler dados salvos', e);
+    return defaultState();
+  }
+}
+
+function persistLocal(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error('Estúdio VBO: falha ao salvar dados', e); alert('Não foi possível salvar os dados neste navegador (armazenamento cheio ou bloqueado).'); }
+}
+
+var lastPushedJSON = null;
+var remotePushTimer = null;
+
+function scheduleRemotePush(){
+  if(remotePushTimer) clearTimeout(remotePushTimer);
+  remotePushTimer = setTimeout(function(){
+    remotePushTimer = null;
+    var json = JSON.stringify(state);
+    lastPushedJSON = json;
+    if(typeof window.vboPushRemote === 'function') window.vboPushRemote(json);
+  }, 400);
+}
+
+function saveState(){
+  persistLocal();
+  scheduleRemotePush();
+}
+
+/* ------------------------------------------------------------
+   Ponte com o módulo Firebase (script type="module" abaixo).
+   O módulo cuida de login e sincronização em tempo real; aqui
+   só reagimos ao que ele nos entrega.
+------------------------------------------------------------ */
+window.vboApplyRemoteState = function(json){
+  if(json === lastPushedJSON) return; // eco do nosso próprio envio, ignora
+  var parsed;
+  try{ parsed = JSON.parse(json); }
+  catch(e){ console.error('Estúdio VBO: dados remotos inválidos', e); return; }
+  state = normalizeState(parsed);
+  persistLocal();
+  applyTheme();
+  renderAll();
+  document.getElementById('input-saldo-inicial').value = state.saldoInicial || '';
+};
+
+window.vboGetLocalStateJSON = function(){ return JSON.stringify(state); };
+
+window.vboShowApp = function(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+};
+
+window.vboShowLogin = function(msg){
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  var statusEl = document.getElementById('login-status');
+  if(statusEl) statusEl.textContent = msg || '';
+  var btn = document.getElementById('btn-login');
+  if(btn){ btn.disabled = false; btn.textContent = 'Entrar'; }
+};
+
+window.vboSetSyncStatus = function(text){
+  var el = document.getElementById('sync-status-txt');
+  if(el) el.textContent = text;
+};
+
+var state = loadState();
+
+/* ============================================================
+   CAPACIDADE DE DOWNLOAD (quando publicado como Artifact)
+   Fora do visualizador do Claude (arquivo aberto direto ou
+   hospedado em outro lugar), window.claude não existe e o
+   backup usa o link de download padrão do navegador.
+============================================================ */
+var downloadsCapability = null;
+if(window.claude && typeof window.claude.use === 'function'){
+  window.claude.use('downloads').then(function(d){ downloadsCapability = d; }).catch(function(){ downloadsCapability = null; });
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+/* ============================================================
+   HELPERS DE FORMATAÇÃO
+============================================================ */
+var BRL = new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'});
+function fmtBRL(v){ return BRL.format(Number(v)||0); }
+function todayISO(){ var d=new Date(); return isoFromParts(d.getFullYear(), d.getMonth(), d.getDate()); }
+function isoFromParts(y,m,d){
+  var mm=(m+1)<10?'0'+(m+1):(m+1); var dd=d<10?'0'+d:d;
+  return y+'-'+mm+'-'+dd;
+}
+function dateFromISO(iso){ var p=iso.split('-'); return new Date(parseInt(p[0],10), parseInt(p[1],10)-1, parseInt(p[2],10)); }
+function fmtDateBR(iso){ if(!iso) return '—'; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function fmtDateShort(iso){ var d=dateFromISO(iso); return d.getDate()+' '+MESES_ABR[d.getMonth()]; }
+function sum(arr){ return arr.reduce(function(a,b){return a+(Number(b)||0);},0); }
+function statusLabel(s){ return s==='confirmado'?'Confirmado':s==='pendente'?'Pendente':'Recebido'; }
+
+/* ============================================================
+   NAVEGAÇÃO DE MÊS (compartilhada entre abas)
+============================================================ */
+var today = new Date();
+var viewYear = today.getFullYear();
+var viewMonth = today.getMonth();
+
+function renderMonthNav(containerId){
+  var el = document.getElementById(containerId);
+  var isCurrent = (viewYear===today.getFullYear() && viewMonth===today.getMonth());
+  el.innerHTML =
+    '<button data-monthnav="prev" aria-label="Mês anterior">‹</button>' +
+    '<div style="text-align:center;flex:1;">' +
+      '<div class="month-label">'+MESES[viewMonth]+' <span class="num" style="font-weight:400;color:var(--text-muted);">'+viewYear+'</span></div>' +
+      (isCurrent?'':'<button class="today-btn" data-monthnav="today">Ir para hoje</button>') +
+    '</div>' +
+    '<button data-monthnav="next" aria-label="Próximo mês">›</button>';
+}
+
+function changeMonth(delta){
+  viewMonth += delta;
+  if(viewMonth<0){viewMonth=11;viewYear--;}
+  if(viewMonth>11){viewMonth=0;viewYear++;}
+  renderAll();
+}
+function goToday(){ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderAll(); }
+
+/* ============================================================
+   CONSULTAS DE DADOS
+============================================================ */
+function eventosDoMes(y,m){
+  return state.eventos.filter(function(e){
+    if(!e.data) return false;
+    var d = dateFromISO(e.data);
+    return d.getFullYear()===y && d.getMonth()===m;
+  }).sort(function(a,b){ return a.data.localeCompare(b.data); });
+}
+function despesasDoMes(y,m){
+  return state.despesas.filter(function(d){
+    if(!d.vencimento) return false;
+    var dt = dateFromISO(d.vencimento);
+    return dt.getFullYear()===y && dt.getMonth()===m;
+  }).sort(function(a,b){ return a.vencimento.localeCompare(b.vencimento); });
+}
+/* ============================================================
+   QUEM VAI — Vinicius, Bia ou os dois juntos no mesmo trampo.
+   Um evento "ambos" ocupa a agenda das duas pessoas ao mesmo
+   tempo; eventos sem esse campo (dados antigos) são tratados
+   como "ambos" por segurança, mantendo o alerta de conflito.
+============================================================ */
+var PESSOA_LABEL = {vinicius:'Vinicius', bia:'Bia'};
+function pessoasDoEvento(e){
+  if(e.responsavel==='vinicius') return ['vinicius'];
+  if(e.responsavel==='bia') return ['bia'];
+  return ['vinicius','bia'];
+}
+function pessoaTexto(e){
+  if(e.responsavel==='vinicius') return 'Vinicius';
+  if(e.responsavel==='bia') return 'Bia';
+  return 'Vinicius + Bia';
+}
+
+function conflitosDoMes(y,m){
+  var evs = eventosDoMes(y,m);
+  var byDate = {};
+  evs.forEach(function(e){ (byDate[e.data]=byDate[e.data]||[]).push(e); });
+  var out = [];
+  Object.keys(byDate).sort().forEach(function(iso){
+    var lista = byDate[iso];
+    ['vinicius','bia'].forEach(function(p){
+      var evsPessoa = lista.filter(function(e){ return pessoasDoEvento(e).indexOf(p)>-1; });
+      if(evsPessoa.length>1) out.push({data:iso, pessoa:p, eventos:evsPessoa});
+    });
+  });
+  return out;
+}
+function conflictDatesSet(y,m){
+  var set = {};
+  conflitosDoMes(y,m).forEach(function(c){ set[c.data]=true; });
+  return set;
+}
+
+function saldoAtualCaixa(){
+  // Dinheiro real em caixa: saldo inicial + tudo que já foi recebido − tudo
+  // que já foi pago (histórico completo). Dinheiro investido NÃO entra aqui
+  // de propósito — investimentos são tratados como "fora do caixa".
+  var totalRecebidoGeral = sum(state.eventos.filter(function(e){return e.status==='recebido';}).map(function(e){return e.valor;}));
+  var totalPagoGeral = sum(state.despesas.filter(function(d){return d.paga;}).map(function(d){return d.valor;}));
+  return (Number(state.saldoInicial)||0) + totalRecebidoGeral - totalPagoGeral;
+}
+
+function totalInvestido(){
+  return sum(state.investimentos.map(function(i){return i.valor;}));
+}
+
+function computeFinancials(y,m){
+  var evs = eventosDoMes(y,m);
+  var desp = despesasDoMes(y,m);
+  var confirmado = sum(evs.filter(function(e){return e.status==='confirmado';}).map(function(e){return e.valor;}));
+  var pendente   = sum(evs.filter(function(e){return e.status==='pendente';}).map(function(e){return e.valor;}));
+  var recebidoMes= sum(evs.filter(function(e){return e.status==='recebido';}).map(function(e){return e.valor;}));
+  var despesasPagas = sum(desp.filter(function(d){return d.paga;}).map(function(d){return d.valor;}));
+  var despesasAPagar = sum(desp.filter(function(d){return !d.paga;}).map(function(d){return d.valor;}));
+  var totalDespesas = despesasPagas + despesasAPagar;
+
+  var saldoAtual = saldoAtualCaixa();
+  var projecaoConservadora = saldoAtual + confirmado - despesasAPagar;
+  var projecaoOtimista = saldoAtual + confirmado + pendente - despesasAPagar;
+
+  return {confirmado:confirmado, pendente:pendente, recebidoMes:recebidoMes,
+    despesasPagas:despesasPagas, despesasAPagar:despesasAPagar, totalDespesas:totalDespesas,
+    saldoAtual:saldoAtual, projecaoConservadora:projecaoConservadora, projecaoOtimista:projecaoOtimista};
+}
+
+/* ============================================================
+   MÉDIA MENSAL LÍQUIDA (últimos meses com dados)
+   Usada para estimar quando uma compra futura fica viável.
+============================================================ */
+function mediaMensalLiquida(){
+  var d = new Date();
+  var valores = [];
+  for(var i=0;i<3;i++){
+    var y = d.getFullYear(), m = d.getMonth()-i;
+    while(m<0){ m+=12; y--; }
+    var evs = eventosDoMes(y,m);
+    var desp = despesasDoMes(y,m);
+    if(!evs.length && !desp.length) continue;
+    var receitaMes = sum(evs.filter(function(e){return e.status!=='pendente';}).map(function(e){return e.valor;}));
+    var despesaMes = sum(desp.map(function(x){return x.valor;}));
+    valores.push(receitaMes - despesaMes);
+  }
+  if(!valores.length) return null;
+  return sum(valores) / valores.length;
+}
+
+/* ============================================================
+   DESPESAS FIXAS RECORRENTES (aluguel, convênio, financiamentos…)
+   Templates em state.despesasFixas geram automaticamente uma
+   despesa "de verdade" (editável/excluível) em cada mês.
+============================================================ */
+function clampDiaNoMes(y,m,dia){
+  var ultimoDia = new Date(y, m+1, 0).getDate();
+  return Math.min(Math.max(parseInt(dia,10)||1,1), ultimoDia);
+}
+function ensureDespesasFixasGeradas(y,m){
+  if(!state.despesasFixas.length) return;
+  var mudou = false;
+  state.despesasFixas.forEach(function(t){
+    var jaExiste = state.despesas.some(function(d){
+      if(d.origemTemplateId!==t.id || !d.vencimento) return false;
+      var dt = dateFromISO(d.vencimento);
+      return dt.getFullYear()===y && dt.getMonth()===m;
+    });
+    if(jaExiste) return;
+    var dia = clampDiaNoMes(y,m,t.diaVencimento);
+    state.despesas.push({
+      id: uid(), descricao: t.descricao, categoria: t.categoria, valor: t.valor,
+      vencimento: isoFromParts(y,m,dia), tipo:'fixa', paga:false, origemTemplateId: t.id
+    });
+    mudou = true;
+  });
+  if(mudou) saveState();
+}
+function ensureUpcomingFixedExpenses(){
+  var d = new Date();
+  for(var i=0;i<3;i++){
+    var y=d.getFullYear(), m=d.getMonth()+i;
+    while(m>11){ m-=12; y++; }
+    ensureDespesasFixasGeradas(y,m);
+  }
+}
+
+/* ============================================================
+   COMPRAS FUTURAS — melhor momento de compra
+   Baseado só no saldo em caixa + média mensal líquida.
+   Nunca considera o dinheiro que está investido.
+============================================================ */
+function estimateBestPurchaseTime(item){
+  var saldo = saldoAtualCaixa();
+  var falta = (Number(item.valorEstimado)||0) - saldo;
+  if(falta<=0){
+    return {status:'now', texto:'Já dá pra comprar agora'};
+  }
+  var media = mediaMensalLiquida();
+  if(media===null || media<=0){
+    return {status:'unknown', texto:'Ainda sem dados suficientes de fluxo de caixa para estimar uma data'};
+  }
+  var meses = Math.ceil(falta/media);
+  var d = new Date();
+  var y = d.getFullYear(), m = d.getMonth()+meses;
+  while(m>11){ m-=12; y++; }
+  var texto = meses<=1 ? 'Estimativa: dentro de ~1 mês (por volta de '+MESES[m]+'/'+y+')'
+    : 'Estimativa: dentro de ~'+meses+' meses (por volta de '+MESES[m]+'/'+y+')';
+  return {status:'estimate', texto:texto, faltam:falta, meses:meses};
+}
+
+function conflictBanner(y,m){
+  var conflitos = conflitosDoMes(y,m);
+  if(conflitos.length===0) return '';
+  var diasUnicos = {};
+  conflitos.forEach(function(c){ diasUnicos[c.data]=true; });
+  var items = conflitos.map(function(c){
+    var nomes = c.eventos.map(function(e){return escapeHtml(e.titulo||'Sem título');}).join(' + ');
+    return '<li>'+fmtDateBR(c.data)+' — '+PESSOA_LABEL[c.pessoa]+' em dois lugares: '+nomes+'</li>';
+  }).join('');
+  var n = Object.keys(diasUnicos).length;
+  return '<div class="alert">⚠️<div><strong>'+n+' data(s) com agenda dupla</strong><ul>'+items+'</ul></div></div>';
+}
+
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+/* ============================================================
+   RENDER: DASHBOARD
+============================================================ */
+function renderDashboard(){
+  renderMonthNav('dash-month-nav');
+  var f = computeFinancials(viewYear, viewMonth);
+
+  document.getElementById('dash-conflict-slot').innerHTML = conflictBanner(viewYear, viewMonth);
+  document.getElementById('dash-saldo').textContent = fmtBRL(f.saldoAtual);
+  document.getElementById('dash-confirmado').textContent = fmtBRL(f.confirmado);
+  document.getElementById('dash-pendente').textContent = fmtBRL(f.pendente);
+  document.getElementById('dash-despesas').textContent = fmtBRL(f.totalDespesas);
+  document.getElementById('dash-despesas-sub').textContent = fmtBRL(f.despesasPagas)+' pagas · '+fmtBRL(f.despesasAPagar)+' a pagar';
+  document.getElementById('dash-proj-cons').textContent = fmtBRL(f.projecaoConservadora);
+  document.getElementById('dash-proj-otim').textContent = fmtBRL(f.projecaoOtimista);
+  document.getElementById('dash-investido').textContent = fmtBRL(totalInvestido());
+
+  var receber = state.eventos.filter(function(e){ return e.status!=='recebido'; })
+    .sort(function(a,b){return a.data.localeCompare(b.data);})
+    .slice(0,6);
+  document.getElementById('dash-list-receber').innerHTML = receber.length ? receber.map(rowEvento).join('') :
+    '<div class="empty-state">Nenhum recebimento pendente. Cadastre um trampo em Agenda ou Financeiro.</div>';
+
+  var pagar = state.despesas.filter(function(d){ return !d.paga; })
+    .sort(function(a,b){return a.vencimento.localeCompare(b.vencimento);})
+    .slice(0,6);
+  document.getElementById('dash-list-pagar').innerHTML = pagar.length ? pagar.map(rowDespesa).join('') :
+    '<div class="empty-state">Nenhuma conta em aberto por aqui. 🎉</div>';
+}
+
+function rowEvento(e){
+  var sign = e.status==='recebido' ? 'pos' : '';
+  return '<div class="row" data-open-evento="'+e.id+'">'+
+    '<div class="stripe '+e.status+'"></div>'+
+    '<div class="row-body">'+
+      '<div class="row-title">'+escapeHtml(e.titulo||'Sem título')+'</div>'+
+      '<div class="row-sub">'+escapeHtml(e.cliente||'—')+' · '+fmtDateShort(e.data)+' · '+pessoaTexto(e)+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;">'+
+      '<div class="row-value '+sign+'">'+fmtBRL(e.valor)+'</div>'+
+      '<span class="badge '+e.status+'" style="margin-top:4px;">'+statusLabel(e.status)+'</span>'+
+    '</div>'+
+  '</div>';
+}
+
+function rowDespesa(d){
+  var overdue = !d.paga && d.vencimento < todayISO();
+  var badgeClass = d.paga ? 'paga' : (overdue ? 'vencida' : 'aberta');
+  var badgeTxt = d.paga ? 'Paga' : (overdue ? 'Vencida' : 'Em aberto');
+  return '<div class="row" data-open-despesa="'+d.id+'">'+
+    '<div class="stripe '+(d.paga?'paga':'despesa')+'"></div>'+
+    '<div class="row-body">'+
+      '<div class="row-title">'+escapeHtml(d.descricao||'Sem descrição')+'</div>'+
+      '<div class="row-sub">'+escapeHtml(d.categoria||'Outros')+' · vence '+fmtDateShort(d.vencimento)+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;">'+
+      '<div class="row-value neg">'+fmtBRL(d.valor)+'</div>'+
+      '<span class="badge '+badgeClass+'" style="margin-top:4px;">'+badgeTxt+'</span>'+
+    '</div>'+
+  '</div>';
+}
+
+function rowInvestimento(inv){
+  return '<div class="row" data-open-investimento="'+inv.id+'">'+
+    '<div class="stripe" style="background:var(--info);"></div>'+
+    '<div class="row-body">'+
+      '<div class="row-title">'+escapeHtml(inv.nome||'Sem nome')+'</div>'+
+      '<div class="row-sub">'+escapeHtml(inv.tipo||'Outro')+' · '+fmtDateShort(inv.data)+'</div>'+
+    '</div>'+
+    '<div class="row-value">'+fmtBRL(inv.valor)+'</div>'+
+  '</div>';
+}
+
+function rowCompra(item){
+  var est = estimateBestPurchaseTime(item);
+  var stripeVar = est.status==='now' ? '--success' : est.status==='estimate' ? '--info' : '--text-faint';
+  var badgeClass = est.status==='now' ? 'pode-comprar' : est.status==='estimate' ? 'previsao' : 'sem-dados';
+  var badgeTxt = est.status==='now' ? 'Pode comprar' : est.status==='estimate' ? ('~'+est.meses+(est.meses===1?' mês':' meses')) : 'Sem previsão';
+  return '<div class="row" data-open-compra="'+item.id+'" style="align-items:flex-start;">'+
+    '<div class="stripe" style="background:var('+stripeVar+');"></div>'+
+    '<div class="row-body">'+
+      '<div class="row-title">'+escapeHtml(item.nome||'Sem nome')+ (item.prioridade==='alta'?' 🔺':'') +'</div>'+
+      '<div class="row-sub">'+escapeHtml(item.categoria||'Equipamento')+' · '+fmtBRL(item.valorEstimado)+'</div>'+
+      '<div class="row-sub" style="margin-top:3px;color:var(--text);">'+est.texto+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;flex-shrink:0;"><span class="badge '+badgeClass+'">'+badgeTxt+'</span></div>'+
+  '</div>';
+}
+
+function rowCompraComprada(item){
+  return '<div class="row" data-open-compra="'+item.id+'">'+
+    '<div class="stripe paga"></div>'+
+    '<div class="row-body">'+
+      '<div class="row-title">'+escapeHtml(item.nome||'Sem nome')+'</div>'+
+      '<div class="row-sub">'+escapeHtml(item.categoria||'Equipamento')+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;">'+
+      '<div class="row-value">'+fmtBRL(item.valorEstimado)+'</div>'+
+      '<span class="badge paga" style="margin-top:4px;">Comprado</span>'+
+    '</div>'+
+  '</div>';
+}
+
+function rowDespesaFixa(t){
+  return '<div class="row" data-open-fixa="'+t.id+'">'+
+    '<div class="stripe despesa"></div>'+
+    '<div class="row-body">'+
+      '<div class="row-title">'+escapeHtml(t.descricao||'Sem nome')+'</div>'+
+      '<div class="row-sub">'+escapeHtml(t.categoria||'Outros')+' · todo dia '+t.diaVencimento+'</div>'+
+    '</div>'+
+    '<div class="row-value neg">'+fmtBRL(t.valor)+'</div>'+
+  '</div>';
+}
+
+/* ============================================================
+   GRÁFICO: DESPESAS POR CATEGORIA
+   Uma única cor (matiz sequencial por magnitude), barras
+   ordenadas do maior para o menor gasto — sem necessidade de
+   legenda, já que cada barra já traz o rótulo da categoria.
+============================================================ */
+function renderDespesasChart(y,m){
+  var desp = despesasDoMes(y,m);
+  if(!desp.length) return '';
+  var porCategoria = {};
+  desp.forEach(function(d){
+    var cat = d.categoria || 'Outros';
+    porCategoria[cat] = (porCategoria[cat]||0) + (Number(d.valor)||0);
+  });
+  var entries = Object.keys(porCategoria).map(function(k){ return {categoria:k, valor:porCategoria[k]}; });
+  entries.sort(function(a,b){ return b.valor-a.valor; });
+  var max = entries[0].valor || 1;
+  var n = entries.length;
+  var rows = entries.map(function(e,i){
+    var pct = Math.max((e.valor/max)*100, 4);
+    var mix = n>1 ? Math.round(100 - (i/(n-1))*55) : 100;
+    var fillColor = 'color-mix(in srgb, var(--danger) '+mix+'%, var(--surface-2))';
+    return '<div class="chart-row">'+
+      '<span class="chart-label">'+escapeHtml(e.categoria)+'</span>'+
+      '<span class="chart-track"><span class="chart-fill" style="width:'+pct.toFixed(1)+'%;background:'+fillColor+';"></span></span>'+
+      '<span class="chart-value num">'+fmtBRL(e.valor)+'</span>'+
+    '</div>';
+  }).join('');
+  return '<div class="card" style="margin-bottom:14px;">'+
+    '<span class="label" style="display:block;margin-bottom:8px;">Despesas por categoria</span>'+
+    rows+
+  '</div>';
+}
+
+/* ============================================================
+   RENDER: AGENDA
+============================================================ */
+function renderAgenda(){
+  renderMonthNav('agenda-month-nav');
+  document.getElementById('agenda-conflict-slot').innerHTML = conflictBanner(viewYear, viewMonth);
+
+  var firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  var daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  var evs = eventosDoMes(viewYear, viewMonth);
+  var byDate = {};
+  evs.forEach(function(e){ (byDate[e.data]=byDate[e.data]||[]).push(e); });
+  var conflictSet = conflictDatesSet(viewYear, viewMonth);
+
+  var html = '';
+  for(var i=0;i<firstDay;i++){ html += '<div class="cal-day empty"></div>'; }
+  for(var day=1; day<=daysInMonth; day++){
+    var iso = isoFromParts(viewYear, viewMonth, day);
+    var dayEvs = byDate[iso] || [];
+    var isToday = iso===todayISO();
+    var hasConflict = !!conflictSet[iso];
+    var dots = dayEvs.slice(0,4).map(function(e){ return '<span style="background:var(--'+(e.status==='confirmado'?'info':e.status==='pendente'?'warning':'success')+')"></span>'; }).join('');
+    html += '<div class="cal-day'+(isToday?' today':'')+(hasConflict?' has-conflict':'')+'" data-open-dia="'+iso+'">'+
+      (hasConflict?'<span class="conflict-flag">⚠️</span>':'')+
+      '<span class="num-txt">'+day+'</span>'+
+      (dots?'<span class="dots">'+dots+'</span>':'')+
+    '</div>';
+  }
+  document.getElementById('agenda-grid').innerHTML = html;
+
+  document.getElementById('agenda-count').textContent = evs.length ? evs.length+' evento(s)' : '';
+  document.getElementById('agenda-list').innerHTML = evs.length ? evs.map(rowEvento).join('') :
+    '<div class="empty-state">Nenhum evento neste mês ainda.<br>Toque em "Novo evento" ou em um dia do calendário.</div>';
+}
+
+/* ============================================================
+   RENDER: FINANCEIRO
+============================================================ */
+var finTab = 'receitas';
+function renderFinanceiro(){
+  renderMonthNav('fin-month-nav');
+  var receitas = eventosDoMes(viewYear, viewMonth);
+  var despesas = despesasDoMes(viewYear, viewMonth);
+
+  document.getElementById('fin-receitas-count').textContent = receitas.length ? receitas.length+' item(ns)' : '';
+  document.getElementById('fin-list-receitas').innerHTML = receitas.length ? receitas.map(rowEvento).join('') :
+    '<div class="empty-state">Nenhuma receita cadastrada para '+MESES[viewMonth]+'.</div>';
+
+  document.getElementById('fin-despesas-chart').innerHTML = renderDespesasChart(viewYear, viewMonth);
+  document.getElementById('fin-despesas-count').textContent = despesas.length ? despesas.length+' item(ns)' : '';
+  document.getElementById('fin-list-despesas').innerHTML = despesas.length ? despesas.map(rowDespesa).join('') :
+    '<div class="empty-state">Nenhuma despesa cadastrada para '+MESES[viewMonth]+'.</div>';
+
+  renderInvestimentos();
+  renderCompras();
+}
+
+function renderInvestimentos(){
+  var lista = state.investimentos.slice().sort(function(a,b){ return (b.data||'').localeCompare(a.data||''); });
+  document.getElementById('fin-total-investido').textContent = fmtBRL(totalInvestido());
+  document.getElementById('fin-investimentos-count').textContent = lista.length ? lista.length+' item(ns)' : '';
+  document.getElementById('fin-list-investimentos').innerHTML = lista.length ? lista.map(rowInvestimento).join('') :
+    '<div class="empty-state">Nenhum investimento cadastrado ainda.</div>';
+}
+
+var PRIORIDADE_ORDEM = {alta:0, media:1, baixa:2};
+function renderCompras(){
+  var pendentes = state.comprasFuturas.filter(function(c){ return !c.comprado; });
+  var compradas = state.comprasFuturas.filter(function(c){ return c.comprado; });
+
+  pendentes.sort(function(a,b){
+    var ea = estimateBestPurchaseTime(a), eb = estimateBestPurchaseTime(b);
+    var ordem = {now:0, estimate:1, unknown:2};
+    if(ordem[ea.status]!==ordem[eb.status]) return ordem[ea.status]-ordem[eb.status];
+    if(ea.status==='estimate' && eb.status==='estimate' && ea.meses!==eb.meses) return ea.meses-eb.meses;
+    return (PRIORIDADE_ORDEM[a.prioridade]||1) - (PRIORIDADE_ORDEM[b.prioridade]||1);
+  });
+
+  document.getElementById('fin-compras-count').textContent = pendentes.length ? pendentes.length+' item(ns)' : '';
+  document.getElementById('fin-list-compras').innerHTML = pendentes.length ? pendentes.map(rowCompra).join('') :
+    '<div class="empty-state">Nenhum item na lista de compras. Adicione o próximo equipamento que você quer comprar.</div>';
+
+  var wrap = document.getElementById('fin-compras-compradas-wrap');
+  if(compradas.length){
+    wrap.style.display = '';
+    document.getElementById('fin-list-compras-compradas').innerHTML = compradas.map(rowCompraComprada).join('');
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   RENDER GERAL / ABAS
+============================================================ */
+function renderAll(){
+  ensureUpcomingFixedExpenses();
+  ensureDespesasFixasGeradas(viewYear, viewMonth);
+  renderDashboard();
+  renderAgenda();
+  renderFinanceiro();
+}
+
+function switchTab(tab){
+  document.querySelectorAll('main.view').forEach(function(v){ v.classList.remove('active'); });
+  document.getElementById('view-'+tab).classList.add('active');
+  document.querySelectorAll('.bottomnav button').forEach(function(b){ b.classList.toggle('active', b.dataset.tab===tab); });
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll('.bottomnav button').forEach(function(btn){
+  btn.addEventListener('click', function(){ switchTab(btn.dataset.tab); });
+});
+
+/* ============================================================
+   TEMA
+============================================================ */
+function applyTheme(){
+  var root = document.documentElement;
+  if(state.theme==='light'){ root.setAttribute('data-theme','light'); document.getElementById('btn-theme').textContent='☀️'; }
+  else if(state.theme==='dark'){ root.setAttribute('data-theme','dark'); document.getElementById('btn-theme').textContent='🌙'; }
+  else { root.removeAttribute('data-theme'); document.getElementById('btn-theme').textContent='🌓'; }
+  var effectiveDark = state.theme==='dark' || (state.theme===null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.getElementById('toggle-dark').checked = effectiveDark;
+}
+document.getElementById('btn-theme').addEventListener('click', function(){
+  var effectiveDark = state.theme==='dark' || (state.theme===null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  state.theme = effectiveDark ? 'light' : 'dark';
+  saveState(); applyTheme();
+});
+document.getElementById('toggle-dark').addEventListener('change', function(e){
+  state.theme = e.target.checked ? 'dark' : 'light';
+  saveState(); applyTheme();
+});
+
+/* ============================================================
+   MODAIS — genérico
+============================================================ */
+function openModal(id){ document.getElementById(id).classList.add('active'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(function(ov){
+  ov.addEventListener('click', function(e){ if(e.target===ov) closeModal(ov.id); });
+});
+
+function showConfirm(title, msg, onOk){
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  openModal('modal-confirm');
+  var okBtn = document.getElementById('btn-confirm-ok');
+  var handler = function(){ closeModal('modal-confirm'); okBtn.removeEventListener('click', handler); onOk(); };
+  okBtn.addEventListener('click', handler);
+}
+document.getElementById('btn-confirm-cancel').addEventListener('click', function(){ closeModal('modal-confirm'); });
+
+function clearFieldError(fieldId){ document.getElementById(fieldId).classList.remove('has-error'); }
+function setFieldError(fieldId){ document.getElementById(fieldId).classList.add('has-error'); }
+
+/* ============================================================
+   MODAL: EVENTO
+============================================================ */
+var editingEventoId = null;
+function openEventoModal(id, prefillDate){
+  editingEventoId = id || null;
+  var form = document.getElementById('form-evento');
+  form.reset();
+  ['field-evento-titulo','field-evento-data','field-evento-valor'].forEach(clearFieldError);
+
+  if(id){
+    var e = state.eventos.find(function(x){return x.id===id;});
+    if(!e) return;
+    document.getElementById('modal-evento-title').textContent = 'Editar evento';
+    document.getElementById('evento-id').value = e.id;
+    document.getElementById('evento-titulo').value = e.titulo||'';
+    document.getElementById('evento-cliente').value = e.cliente||'';
+    document.getElementById('evento-data').value = e.data||'';
+    document.getElementById('evento-valor').value = e.valor||'';
+    document.getElementById('evento-local').value = e.local||'';
+    document.getElementById('evento-notas').value = e.notas||'';
+    var radio = document.querySelector('input[name="evento-status"][value="'+(e.status||'confirmado')+'"]');
+    if(radio) radio.checked = true;
+    var radioResp = document.querySelector('input[name="evento-responsavel"][value="'+(e.responsavel||'ambos')+'"]');
+    if(radioResp) radioResp.checked = true;
+    document.getElementById('btn-evento-excluir').style.display = 'inline-flex';
+  } else {
+    document.getElementById('modal-evento-title').textContent = 'Novo evento';
+    document.getElementById('evento-id').value = '';
+    document.getElementById('evento-data').value = prefillDate || '';
+    var r2 = document.querySelector('input[name="evento-status"][value="confirmado"]');
+    if(r2) r2.checked = true;
+    var r2Resp = document.querySelector('input[name="evento-responsavel"][value="ambos"]');
+    if(r2Resp) r2Resp.checked = true;
+    document.getElementById('btn-evento-excluir').style.display = 'none';
+  }
+  updateStatusPickerClasses();
+  openModal('modal-evento');
+}
+function updateStatusPickerClasses(){
+  document.querySelectorAll('.status-picker label').forEach(function(lab){
+    var input = lab.querySelector('input');
+    lab.classList.toggle('checked', input.checked);
+  });
+}
+document.querySelectorAll('#form-evento input[name="evento-status"]').forEach(function(r){
+  r.addEventListener('change', updateStatusPickerClasses);
+});
+document.querySelectorAll('#form-evento input[name="evento-responsavel"]').forEach(function(r){
+  r.addEventListener('change', updateStatusPickerClasses);
+});
+document.querySelectorAll('#form-despesa input[name="despesa-tipo"]').forEach(function(r){
+  r.addEventListener('change', function(){
+    document.querySelectorAll('#form-despesa .status-picker label').forEach(function(lab){
+      lab.classList.toggle('checked', lab.querySelector('input').checked);
+    });
+  });
+});
+
+document.getElementById('btn-add-evento-agenda').addEventListener('click', function(){ openEventoModal(null); });
+document.getElementById('btn-add-receita').addEventListener('click', function(){ openEventoModal(null); });
+document.getElementById('btn-evento-cancelar').addEventListener('click', function(){ closeModal('modal-evento'); });
+
+document.getElementById('form-evento').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  var titulo = document.getElementById('evento-titulo').value.trim();
+  var data = document.getElementById('evento-data').value;
+  var valorRaw = document.getElementById('evento-valor').value;
+  var valor = parseFloat(valorRaw);
+  var statusEl = document.querySelector('input[name="evento-status"]:checked');
+  var responsavelEl = document.querySelector('input[name="evento-responsavel"]:checked');
+
+  var ok = true;
+  if(!titulo){ setFieldError('field-evento-titulo'); ok=false; } else clearFieldError('field-evento-titulo');
+  if(!data){ setFieldError('field-evento-data'); ok=false; } else clearFieldError('field-evento-data');
+  if(!(valor>=0) || valorRaw===''){ setFieldError('field-evento-valor'); ok=false; } else clearFieldError('field-evento-valor');
+  if(!ok) return;
+
+  var payload = {
+    titulo: titulo,
+    cliente: document.getElementById('evento-cliente').value.trim(),
+    data: data,
+    valor: valor,
+    status: statusEl ? statusEl.value : 'confirmado',
+    responsavel: responsavelEl ? responsavelEl.value : 'ambos',
+    local: document.getElementById('evento-local').value.trim(),
+    notas: document.getElementById('evento-notas').value.trim()
+  };
+
+  if(editingEventoId){
+    var idx = state.eventos.findIndex(function(x){return x.id===editingEventoId;});
+    if(idx>-1) state.eventos[idx] = Object.assign(state.eventos[idx], payload);
+  } else {
+    payload.id = uid();
+    state.eventos.push(payload);
+  }
+  saveState();
+  closeModal('modal-evento');
+  renderAll();
+});
+
+document.getElementById('btn-evento-excluir').addEventListener('click', function(){
+  var id = document.getElementById('evento-id').value;
+  showConfirm('Excluir evento', 'Essa ação não pode ser desfeita. Deseja excluir este evento?', function(){
+    state.eventos = state.eventos.filter(function(e){return e.id!==id;});
+    saveState(); closeModal('modal-evento'); renderAll();
+  });
+});
+
+/* ============================================================
+   MODAL: DESPESA
+============================================================ */
+var editingDespesaId = null;
+function openDespesaModal(id){
+  editingDespesaId = id || null;
+  var form = document.getElementById('form-despesa');
+  form.reset();
+  ['field-despesa-descricao','field-despesa-valor','field-despesa-vencimento'].forEach(clearFieldError);
+
+  if(id){
+    var d = state.despesas.find(function(x){return x.id===id;});
+    if(!d) return;
+    document.getElementById('modal-despesa-title').textContent = 'Editar despesa';
+    document.getElementById('despesa-id').value = d.id;
+    document.getElementById('despesa-descricao').value = d.descricao||'';
+    document.getElementById('despesa-categoria').value = d.categoria||'';
+    document.getElementById('despesa-valor').value = d.valor||'';
+    document.getElementById('despesa-vencimento').value = d.vencimento||'';
+    document.getElementById('despesa-paga').checked = !!d.paga;
+    var radio = document.querySelector('input[name="despesa-tipo"][value="'+(d.tipo||'variavel')+'"]');
+    if(radio) radio.checked = true;
+    document.getElementById('btn-despesa-excluir').style.display = 'inline-flex';
+  } else {
+    document.getElementById('modal-despesa-title').textContent = 'Nova despesa';
+    document.getElementById('despesa-id').value = '';
+    var r2 = document.querySelector('input[name="despesa-tipo"][value="variavel"]');
+    if(r2) r2.checked = true;
+    document.getElementById('btn-despesa-excluir').style.display = 'none';
+  }
+  document.querySelectorAll('#form-despesa .status-picker label').forEach(function(lab){
+    lab.classList.toggle('checked', lab.querySelector('input').checked);
+  });
+  openModal('modal-despesa');
+}
+document.getElementById('btn-add-despesa').addEventListener('click', function(){ openDespesaModal(null); });
+document.getElementById('btn-despesa-cancelar').addEventListener('click', function(){ closeModal('modal-despesa'); });
+
+document.getElementById('form-despesa').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  var descricao = document.getElementById('despesa-descricao').value.trim();
+  var valorRaw = document.getElementById('despesa-valor').value;
+  var valor = parseFloat(valorRaw);
+  var vencimento = document.getElementById('despesa-vencimento').value;
+  var tipoEl = document.querySelector('input[name="despesa-tipo"]:checked');
+
+  var ok = true;
+  if(!descricao){ setFieldError('field-despesa-descricao'); ok=false; } else clearFieldError('field-despesa-descricao');
+  if(!(valor>=0) || valorRaw===''){ setFieldError('field-despesa-valor'); ok=false; } else clearFieldError('field-despesa-valor');
+  if(!vencimento){ setFieldError('field-despesa-vencimento'); ok=false; } else clearFieldError('field-despesa-vencimento');
+  if(!ok) return;
+
+  var payload = {
+    descricao: descricao,
+    categoria: document.getElementById('despesa-categoria').value.trim() || 'Outros',
+    valor: valor,
+    vencimento: vencimento,
+    tipo: tipoEl ? tipoEl.value : 'variavel',
+    paga: document.getElementById('despesa-paga').checked
+  };
+
+  if(editingDespesaId){
+    var idx = state.despesas.findIndex(function(x){return x.id===editingDespesaId;});
+    if(idx>-1) state.despesas[idx] = Object.assign(state.despesas[idx], payload);
+  } else {
+    payload.id = uid();
+    state.despesas.push(payload);
+  }
+  saveState();
+  closeModal('modal-despesa');
+  renderAll();
+});
+
+document.getElementById('btn-despesa-excluir').addEventListener('click', function(){
+  var id = document.getElementById('despesa-id').value;
+  showConfirm('Excluir despesa', 'Essa ação não pode ser desfeita. Deseja excluir esta despesa?', function(){
+    state.despesas = state.despesas.filter(function(d){return d.id!==id;});
+    saveState(); closeModal('modal-despesa'); renderAll();
+  });
+});
+
+/* ============================================================
+   MODAL: INVESTIMENTO
+============================================================ */
+var editingInvestimentoId = null;
+function openInvestimentoModal(id){
+  editingInvestimentoId = id || null;
+  var form = document.getElementById('form-investimento');
+  form.reset();
+  ['field-investimento-nome','field-investimento-valor'].forEach(clearFieldError);
+
+  if(id){
+    var inv = state.investimentos.find(function(x){return x.id===id;});
+    if(!inv) return;
+    document.getElementById('modal-investimento-title').textContent = 'Editar investimento';
+    document.getElementById('investimento-id').value = inv.id;
+    document.getElementById('investimento-nome').value = inv.nome||'';
+    document.getElementById('investimento-valor').value = inv.valor||'';
+    document.getElementById('investimento-data').value = inv.data||'';
+    document.getElementById('investimento-tipo').value = inv.tipo||'';
+    document.getElementById('investimento-notas').value = inv.notas||'';
+    document.getElementById('btn-investimento-excluir').style.display = 'inline-flex';
+  } else {
+    document.getElementById('modal-investimento-title').textContent = 'Novo investimento';
+    document.getElementById('investimento-id').value = '';
+    document.getElementById('investimento-data').value = todayISO();
+    document.getElementById('btn-investimento-excluir').style.display = 'none';
+  }
+  openModal('modal-investimento');
+}
+document.getElementById('btn-add-investimento').addEventListener('click', function(){ openInvestimentoModal(null); });
+document.getElementById('btn-investimento-cancelar').addEventListener('click', function(){ closeModal('modal-investimento'); });
+
+document.getElementById('form-investimento').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  var nome = document.getElementById('investimento-nome').value.trim();
+  var valorRaw = document.getElementById('investimento-valor').value;
+  var valor = parseFloat(valorRaw);
+
+  var ok = true;
+  if(!nome){ setFieldError('field-investimento-nome'); ok=false; } else clearFieldError('field-investimento-nome');
+  if(!(valor>=0) || valorRaw===''){ setFieldError('field-investimento-valor'); ok=false; } else clearFieldError('field-investimento-valor');
+  if(!ok) return;
+
+  var payload = {
+    nome: nome,
+    valor: valor,
+    data: document.getElementById('investimento-data').value || todayISO(),
+    tipo: document.getElementById('investimento-tipo').value.trim() || 'Outro',
+    notas: document.getElementById('investimento-notas').value.trim()
+  };
+
+  if(editingInvestimentoId){
+    var idx = state.investimentos.findIndex(function(x){return x.id===editingInvestimentoId;});
+    if(idx>-1) state.investimentos[idx] = Object.assign(state.investimentos[idx], payload);
+  } else {
+    payload.id = uid();
+    state.investimentos.push(payload);
+  }
+  saveState();
+  closeModal('modal-investimento');
+  renderAll();
+});
+
+document.getElementById('btn-investimento-excluir').addEventListener('click', function(){
+  var id = document.getElementById('investimento-id').value;
+  showConfirm('Excluir investimento', 'Essa ação não pode ser desfeita. Deseja excluir este registro de investimento?', function(){
+    state.investimentos = state.investimentos.filter(function(x){return x.id!==id;});
+    saveState(); closeModal('modal-investimento'); renderAll();
+  });
+});
+
+/* ============================================================
+   MODAL: COMPRA FUTURA (lista de desejos de equipamento)
+============================================================ */
+var editingCompraId = null;
+function openCompraModal(id){
+  editingCompraId = id || null;
+  var form = document.getElementById('form-compra');
+  form.reset();
+  ['field-compra-nome','field-compra-valor'].forEach(clearFieldError);
+
+  if(id){
+    var c = state.comprasFuturas.find(function(x){return x.id===id;});
+    if(!c) return;
+    document.getElementById('modal-compra-title').textContent = 'Editar item';
+    document.getElementById('compra-id').value = c.id;
+    document.getElementById('compra-nome').value = c.nome||'';
+    document.getElementById('compra-categoria').value = c.categoria||'';
+    document.getElementById('compra-valor').value = c.valorEstimado||'';
+    document.getElementById('compra-notas').value = c.notas||'';
+    document.getElementById('compra-comprado').checked = !!c.comprado;
+    var radio = document.querySelector('input[name="compra-prioridade"][value="'+(c.prioridade||'media')+'"]');
+    if(radio) radio.checked = true;
+    document.getElementById('btn-compra-excluir').style.display = 'inline-flex';
+  } else {
+    document.getElementById('modal-compra-title').textContent = 'Novo item para comprar';
+    document.getElementById('compra-id').value = '';
+    var r2 = document.querySelector('input[name="compra-prioridade"][value="media"]');
+    if(r2) r2.checked = true;
+    document.getElementById('btn-compra-excluir').style.display = 'none';
+  }
+  updateStatusPickerClasses();
+  openModal('modal-compra');
+}
+document.getElementById('btn-add-compra').addEventListener('click', function(){ openCompraModal(null); });
+document.getElementById('btn-compra-cancelar').addEventListener('click', function(){ closeModal('modal-compra'); });
+document.querySelectorAll('#form-compra input[name="compra-prioridade"]').forEach(function(r){
+  r.addEventListener('change', updateStatusPickerClasses);
+});
+
+document.getElementById('form-compra').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  var nome = document.getElementById('compra-nome').value.trim();
+  var valorRaw = document.getElementById('compra-valor').value;
+  var valor = parseFloat(valorRaw);
+  var prioEl = document.querySelector('input[name="compra-prioridade"]:checked');
+
+  var ok = true;
+  if(!nome){ setFieldError('field-compra-nome'); ok=false; } else clearFieldError('field-compra-nome');
+  if(!(valor>=0) || valorRaw===''){ setFieldError('field-compra-valor'); ok=false; } else clearFieldError('field-compra-valor');
+  if(!ok) return;
+
+  var payload = {
+    nome: nome,
+    categoria: document.getElementById('compra-categoria').value.trim() || 'Outro',
+    valorEstimado: valor,
+    prioridade: prioEl ? prioEl.value : 'media',
+    comprado: document.getElementById('compra-comprado').checked,
+    notas: document.getElementById('compra-notas').value.trim()
+  };
+
+  if(editingCompraId){
+    var idx = state.comprasFuturas.findIndex(function(x){return x.id===editingCompraId;});
+    if(idx>-1) state.comprasFuturas[idx] = Object.assign(state.comprasFuturas[idx], payload);
+  } else {
+    payload.id = uid();
+    state.comprasFuturas.push(payload);
+  }
+  saveState();
+  closeModal('modal-compra');
+  renderAll();
+});
+
+document.getElementById('btn-compra-excluir').addEventListener('click', function(){
+  var id = document.getElementById('compra-id').value;
+  showConfirm('Excluir item', 'Essa ação não pode ser desfeita. Deseja excluir este item da lista de compras?', function(){
+    state.comprasFuturas = state.comprasFuturas.filter(function(x){return x.id!==id;});
+    saveState(); closeModal('modal-compra'); renderAll();
+  });
+});
+
+/* ============================================================
+   MODAL: DESPESAS FIXAS RECORRENTES (lista + formulário)
+============================================================ */
+function openFixasListaModal(){
+  var lista = state.despesasFixas.slice().sort(function(a,b){ return (a.descricao||'').localeCompare(b.descricao||''); });
+  document.getElementById('fixas-lista-list').innerHTML = lista.length ? lista.map(rowDespesaFixa).join('') :
+    '<div class="empty-state">Nenhuma despesa fixa cadastrada ainda. Aluguel, convênio, carro, moto, parcela do apê… cadastre aqui uma vez e ela entra sozinha todo mês.</div>';
+  openModal('modal-fixas-lista');
+}
+document.getElementById('btn-gerenciar-fixas').addEventListener('click', openFixasListaModal);
+document.getElementById('btn-fixas-fechar').addEventListener('click', function(){ closeModal('modal-fixas-lista'); });
+document.getElementById('btn-fixa-nova').addEventListener('click', function(){ closeModal('modal-fixas-lista'); openFixaFormModal(null); });
+
+var editingFixaId = null;
+function openFixaFormModal(id){
+  editingFixaId = id || null;
+  var form = document.getElementById('form-fixa');
+  form.reset();
+  ['field-fixa-descricao','field-fixa-valor','field-fixa-dia'].forEach(clearFieldError);
+
+  if(id){
+    var t = state.despesasFixas.find(function(x){return x.id===id;});
+    if(!t) return;
+    document.getElementById('modal-fixa-form-title').textContent = 'Editar despesa fixa';
+    document.getElementById('fixa-id').value = t.id;
+    document.getElementById('fixa-descricao').value = t.descricao||'';
+    document.getElementById('fixa-categoria').value = t.categoria||'';
+    document.getElementById('fixa-valor').value = t.valor||'';
+    document.getElementById('fixa-dia').value = t.diaVencimento||'';
+    document.getElementById('btn-fixa-excluir').style.display = 'inline-flex';
+  } else {
+    document.getElementById('modal-fixa-form-title').textContent = 'Nova despesa fixa';
+    document.getElementById('fixa-id').value = '';
+    document.getElementById('btn-fixa-excluir').style.display = 'none';
+  }
+  openModal('modal-fixa-form');
+}
+document.getElementById('btn-fixa-cancelar').addEventListener('click', function(){ closeModal('modal-fixa-form'); openFixasListaModal(); });
+
+document.getElementById('form-fixa').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  var descricao = document.getElementById('fixa-descricao').value.trim();
+  var valorRaw = document.getElementById('fixa-valor').value;
+  var valor = parseFloat(valorRaw);
+  var diaRaw = document.getElementById('fixa-dia').value;
+  var dia = parseInt(diaRaw,10);
+
+  var ok = true;
+  if(!descricao){ setFieldError('field-fixa-descricao'); ok=false; } else clearFieldError('field-fixa-descricao');
+  if(!(valor>=0) || valorRaw===''){ setFieldError('field-fixa-valor'); ok=false; } else clearFieldError('field-fixa-valor');
+  if(!(dia>=1 && dia<=31)){ setFieldError('field-fixa-dia'); ok=false; } else clearFieldError('field-fixa-dia');
+  if(!ok) return;
+
+  var payload = {
+    descricao: descricao,
+    categoria: document.getElementById('fixa-categoria').value.trim() || 'Outros',
+    valor: valor,
+    diaVencimento: dia
+  };
+
+  if(editingFixaId){
+    var idx = state.despesasFixas.findIndex(function(x){return x.id===editingFixaId;});
+    if(idx>-1) state.despesasFixas[idx] = Object.assign(state.despesasFixas[idx], payload);
+  } else {
+    payload.id = uid();
+    state.despesasFixas.push(payload);
+  }
+  saveState();
+  closeModal('modal-fixa-form');
+  ensureUpcomingFixedExpenses();
+  renderAll();
+  openFixasListaModal();
+});
+
+document.getElementById('btn-fixa-excluir').addEventListener('click', function(){
+  var id = document.getElementById('fixa-id').value;
+  showConfirm('Excluir despesa fixa', 'As contas futuras ainda não pagas geradas por ela serão removidas. Contas de meses passados ou já pagas continuam no histórico. Continuar?', function(){
+    state.despesasFixas = state.despesasFixas.filter(function(x){return x.id!==id;});
+    var hoje = todayISO();
+    state.despesas = state.despesas.filter(function(d){
+      return !(d.origemTemplateId===id && !d.paga && d.vencimento>=hoje);
+    });
+    saveState();
+    closeModal('modal-fixa-form');
+    renderAll();
+    openFixasListaModal();
+  });
+});
+
+/* ============================================================
+   MODAL: DIA (calendário)
+============================================================ */
+function openDiaModal(iso){
+  var evs = state.eventos.filter(function(e){return e.data===iso;}).sort(function(a,b){return (a.titulo||'').localeCompare(b.titulo||'');});
+  document.getElementById('modal-dia-title').textContent = fmtDateBR(iso);
+  document.getElementById('modal-dia-list').innerHTML = evs.length ? evs.map(rowEvento).join('') :
+    '<div class="empty-state">Nenhum evento neste dia. Livre para aceitar um novo trampo!</div>';
+  document.getElementById('btn-dia-novo-evento').onclick = function(){ closeModal('modal-dia'); openEventoModal(null, iso); };
+  openModal('modal-dia');
+}
+document.getElementById('btn-dia-fechar').addEventListener('click', function(){ closeModal('modal-dia'); });
+
+/* ============================================================
+   DELEGAÇÃO DE EVENTOS (clique em linhas/dias/mês)
+============================================================ */
+document.addEventListener('click', function(e){
+  var t = e.target;
+
+  var monthBtn = t.closest('[data-monthnav]');
+  if(monthBtn){
+    var action = monthBtn.dataset.monthnav;
+    if(action==='prev') changeMonth(-1);
+    else if(action==='next') changeMonth(1);
+    else if(action==='today') goToday();
+    return;
+  }
+
+  var evRow = t.closest('[data-open-evento]');
+  if(evRow){ openEventoModal(evRow.dataset.openEvento); return; }
+
+  var despRow = t.closest('[data-open-despesa]');
+  if(despRow){ openDespesaModal(despRow.dataset.openDespesa); return; }
+
+  var diaCell = t.closest('[data-open-dia]');
+  if(diaCell){ openDiaModal(diaCell.dataset.openDia); return; }
+
+  var invRow = t.closest('[data-open-investimento]');
+  if(invRow){ openInvestimentoModal(invRow.dataset.openInvestimento); return; }
+
+  var compraRow = t.closest('[data-open-compra]');
+  if(compraRow){ openCompraModal(compraRow.dataset.openCompra); return; }
+
+  var fixaRow = t.closest('[data-open-fixa]');
+  if(fixaRow){ openFixaFormModal(fixaRow.dataset.openFixa); return; }
+
+  var finTabBtn = t.closest('[data-fin-tab]');
+  if(finTabBtn){
+    finTab = finTabBtn.dataset.finTab;
+    document.querySelectorAll('[data-fin-tab]').forEach(function(b){ b.classList.toggle('active', b===finTabBtn); });
+    document.getElementById('fin-panel-receitas').style.display = finTab==='receitas' ? '' : 'none';
+    document.getElementById('fin-panel-despesas').style.display = finTab==='despesas' ? '' : 'none';
+    document.getElementById('fin-panel-investimentos').style.display = finTab==='investimentos' ? '' : 'none';
+    document.getElementById('fin-panel-compras').style.display = finTab==='compras' ? '' : 'none';
+    document.getElementById('fin-month-nav').style.display = (finTab==='receitas'||finTab==='despesas') ? '' : 'none';
+    return;
+  }
+});
+
+/* ============================================================
+   AJUSTES: saldo inicial, export, import, limpar
+============================================================ */
+document.getElementById('input-saldo-inicial').value = state.saldoInicial || '';
+document.getElementById('btn-salvar-saldo').addEventListener('click', function(){
+  var v = parseFloat(document.getElementById('input-saldo-inicial').value);
+  state.saldoInicial = isNaN(v) ? 0 : v;
+  saveState(); renderAll();
+  var btn = document.getElementById('btn-salvar-saldo');
+  var original = btn.textContent;
+  btn.textContent = '✓ Salvo';
+  setTimeout(function(){ btn.textContent = original; }, 1400);
+});
+
+function downloadViaBrowser(jsonStr, filename){
+  var blob = new Blob([jsonStr], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('btn-export').addEventListener('click', function(){
+  var btn = document.getElementById('btn-export');
+  var jsonStr = JSON.stringify(state, null, 2);
+  var filename = 'estudiovbo-backup-'+todayISO()+'.json';
+
+  if(downloadsCapability){
+    downloadsCapability.save({filename:filename, data:jsonStr}).then(function(){
+      var original = btn.textContent;
+      btn.textContent = '✓ Baixado';
+      setTimeout(function(){ btn.textContent = original; }, 1600);
+    }).catch(function(err){
+      if(err && err.code==='declined') return;
+      downloadViaBrowser(jsonStr, filename);
+    });
+    return;
+  }
+  downloadViaBrowser(jsonStr, filename);
+});
+
+document.getElementById('btn-import-trigger').addEventListener('click', function(){
+  document.getElementById('input-import').click();
+});
+document.getElementById('input-import').addEventListener('change', function(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var data = JSON.parse(reader.result);
+      if(typeof data !== 'object' || data===null) throw new Error('formato inválido');
+      showConfirm('Importar backup', 'Isso vai substituir todos os dados compartilhados atuais pelos dados do arquivo importado — para você e para quem mais usa o Estúdio VBO. Continuar?', function(){
+        state = normalizeState(data);
+        saveState(); applyTheme(); renderAll();
+      });
+    }catch(err){
+      alert('Não foi possível ler este arquivo. Verifique se é um backup válido do Estúdio VBO.');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('btn-clear-all').addEventListener('click', function(){
+  showConfirm('Apagar todos os dados', 'Isso vai apagar permanentemente todos os eventos, despesas e configurações — para você e para quem mais usa o Estúdio VBO. Recomendamos exportar um backup antes. Continuar?', function(){
+    state = defaultState();
+    saveState(); applyTheme(); renderAll();
+    document.getElementById('input-saldo-inicial').value = '';
+  });
+});
+
+var btnLogout = document.getElementById('btn-logout');
+if(btnLogout){
+  btnLogout.addEventListener('click', function(){
+    if(typeof window.vboLogout === 'function') window.vboLogout();
+  });
+}
+
+/* ============================================================
+   INICIALIZAÇÃO
+============================================================ */
+applyTheme();
+renderAll();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+
+})();
+</script>
+
+<script type="module">
+/* ============================================================
+   FIREBASE — login compartilhado + sincronização em tempo real
+   ------------------------------------------------------------
+   Passo a passo para ativar (leva ~10 min, é gratuito):
+
+   1. Crie um projeto em https://console.firebase.google.com (gratuito).
+   2. No menu Build → Authentication → aba "Sign-in method", ative
+      "E-mail/senha".
+   3. Ainda em Authentication → aba "Users", clique em "Add user" e
+      crie MANUALMENTE um usuário com o e-mail abaixo (SHARED_LOGIN_EMAIL)
+      e a senha que vocês dois vão digitar para entrar no app. Esse
+      e-mail não precisa existir de verdade — ele só identifica a
+      "conta" compartilhada; a senha é o que importa.
+   4. No menu Build → Firestore Database, clique em "Create database"
+      (modo produção, escolha a região mais próxima).
+   5. Na aba "Rules" do Firestore, substitua o conteúdo por:​
+
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /{document=**} {
+              allow read, write: if request.auth != null;
+            }
+          }
+        }
+
+      e clique em "Publish".
+   6. No menu de engrenagem → "Project settings" → aba "General", role
+      até "Your apps", clique no ícone "</>" (Web) para registrar um
+      app, dê um nome qualquer e copie o objeto de configuração que
+      aparece. Cole os valores dele no lugar de FIREBASE_CONFIG abaixo
+      (substituindo os textos "COLE_AQUI...").
+   7. Publique estes arquivos (index.html, manifest.json, sw.js e os
+      ícones) no GitHub Pages, como combinado antes — o app já fica
+      pronto para os dois usarem, no PC e no celular.
+
+   Enquanto FIREBASE_CONFIG não for preenchido, o app mostra um aviso
+   na tela de login em vez de travar.
+============================================================ */
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
+
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAZHi76d3RIhvfiA92MnuiOI4N2cLePOrA",
+  authDomain: "estudio-vbo.firebaseapp.com",
+  projectId: "estudio-vbo",
+  storageBucket: "estudio-vbo.firebasestorage.app",
+  messagingSenderId: "981158120875",
+  appId: "1:981158120875:web:aa45483f17d438bd7396ee"
+};
+
+// E-mail fixo da "conta" compartilhada — não precisa existir de verdade.
+var SHARED_LOGIN_EMAIL = 'viniciusvanec@gmail.com';
+
+var loginForm = document.getElementById('form-login');
+var loginSenhaInput = document.getElementById('login-senha');
+var loginField = document.getElementById('field-login-senha');
+var loginBtn = document.getElementById('btn-login');
+
+var isConfigured = !!FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey.indexOf('COLE_AQUI') === -1;
+
+if(!isConfigured){
+  window.vboShowLogin('Firebase ainda não configurado — veja as instruções no código (estudio-vbo.html) ou peça ajuda para configurar.');
+  if(loginBtn){ loginBtn.disabled = true; loginBtn.textContent = 'Configuração pendente'; }
+} else {
+  var app = initializeApp(FIREBASE_CONFIG);
+  var auth = getAuth(app);
+  var db = getFirestore(app);
+  var docRef = doc(db, 'estudiovbo', 'dados');
+  var unsubscribeSnapshot = null;
+  var firstSnapshotHandled = false;
+
+  function startSync(){
+    if(unsubscribeSnapshot) return;
+    unsubscribeSnapshot = onSnapshot(docRef, function(snap){
+      if(snap.exists()){
+        var data = snap.data();
+        if(data && typeof data.json === 'string') window.vboApplyRemoteState(data.json);
+      } else if(!firstSnapshotHandled){
+        // Primeiro uso: ainda não existe nada na nuvem — sobe o que já
+        // estava salvo neste navegador (se houver) para começar a sincronizar.
+        pushRemote(window.vboGetLocalStateJSON());
+      }
+      firstSnapshotHandled = true;
+      window.vboSetSyncStatus('Sincronizado');
+    }, function(err){
+      console.error('Estúdio VBO: erro de sincronização', err);
+      window.vboSetSyncStatus('Sem conexão — usando dados salvos neste aparelho');
+    });
+  }
+
+  function pushRemote(json){
+    setDoc(docRef, { json: json, savedAt: Date.now() }).catch(function(err){
+      console.error('Estúdio VBO: falha ao enviar dados', err);
+      window.vboSetSyncStatus('Sem conexão — as mudanças serão enviadas quando a internet voltar');
+    });
+  }
+  window.vboPushRemote = pushRemote;
+
+  window.vboLogout = function(){
+    if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+    firstSnapshotHandled = false;
+    signOut(auth).catch(function(){});
+  };
+
+  onAuthStateChanged(auth, function(user){
+    if(user){
+      window.vboShowApp();
+      window.vboSetSyncStatus('Sincronizando…');
+      startSync();
+    } else {
+      if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+      firstSnapshotHandled = false;
+      window.vboShowLogin();
+    }
+  });
+
+  loginForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var senha = loginSenhaInput.value;
+    if(!senha){ loginField.classList.add('has-error'); return; }
+    loginField.classList.remove('has-error');
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Entrando…';
+    signInWithEmailAndPassword(auth, SHARED_LOGIN_EMAIL, senha).catch(function(){
+      loginField.classList.add('has-error');
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Entrar';
+      loginSenhaInput.value = '';
+      loginSenhaInput.focus();
+    });
+  });
+}
+</script>
+</body>
+</html>
