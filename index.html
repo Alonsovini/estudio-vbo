@@ -364,9 +364,17 @@ main.view.active{display:block;}
 .status-picker label.opt-vinicius.checked{border-color:var(--info);background:var(--info-soft);color:var(--info);}
 .status-picker label.opt-bia.checked{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
 .status-picker label.opt-ambos.checked{border-color:var(--success);background:var(--success-soft);color:var(--success);}
+.status-picker label.opt-trabalho.checked{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+.status-picker label.opt-pessoal.checked{border-color:var(--info);background:var(--info-soft);color:var(--info);}
+.status-picker label.opt-manha.checked{border-color:var(--warning);background:var(--warning-soft);color:var(--warning);}
+.status-picker label.opt-tarde.checked{border-color:var(--info);background:var(--info-soft);color:var(--info);}
+.status-picker label.opt-noite.checked{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+.status-picker label.opt-dia-inteiro.checked{border-color:var(--success);background:var(--success-soft);color:var(--success);}
 .badge.vinicius{background:var(--info-soft);color:var(--info);}
 .badge.bia{background:var(--accent-soft);color:var(--accent);}
 .badge.ambos{background:var(--success-soft);color:var(--success);}
+.badge.pessoal{background:var(--surface-3);color:var(--text-muted);}
+.row .stripe.pessoal{background:var(--accent);}
 .check-row{display:flex;align-items:center;gap:10px;min-height:46px;}
 .check-row input{width:20px;height:20px;accent-color:var(--accent);}
 .check-row span{font-size:14px;font-weight:500;}
@@ -596,8 +604,15 @@ main.view.active{display:block;}
     <h3 id="modal-evento-title">Novo evento</h3>
     <form id="form-evento" novalidate>
       <input type="hidden" id="evento-id">
+      <div class="field">
+        <label>Tipo</label>
+        <div class="status-picker">
+          <label class="opt-trabalho"><input type="radio" name="evento-tipo" value="trabalho">Trabalho</label>
+          <label class="opt-pessoal"><input type="radio" name="evento-tipo" value="pessoal">Evento pessoal</label>
+        </div>
+      </div>
       <div class="field" id="field-evento-titulo">
-        <label for="evento-titulo">Nome do trabalho</label>
+        <label for="evento-titulo" id="label-evento-titulo">Nome do trabalho</label>
         <input type="text" id="evento-titulo" placeholder="Ex: Casamento Ana &amp; Rafa, Ensaio corporativo…">
         <div class="field-error">Informe o nome do trabalho.</div>
       </div>
@@ -609,6 +624,16 @@ main.view.active{display:block;}
         <label for="evento-data">Data</label>
         <input type="date" id="evento-data">
         <div class="field-error">Escolha uma data.</div>
+      </div>
+      <div class="field">
+        <label>Período</label>
+        <div class="status-picker">
+          <label class="opt-manha"><input type="radio" name="evento-periodo" value="manha">Manhã</label>
+          <label class="opt-tarde"><input type="radio" name="evento-periodo" value="tarde">Tarde</label>
+          <label class="opt-noite"><input type="radio" name="evento-periodo" value="noite">Noite</label>
+          <label class="opt-dia-inteiro"><input type="radio" name="evento-periodo" value="dia-inteiro">Dia todo</label>
+        </div>
+        <div class="hint">Ajuda a não marcar conflito quando um vai de manhã e o outro compromisso é à noite, por exemplo.</div>
       </div>
       <div class="field" id="field-evento-valor">
         <label for="evento-valor">Valor (R$)</label>
@@ -1066,6 +1091,25 @@ function pessoaTexto(e){
   return 'Vinicius + Bia';
 }
 
+/* ============================================================
+   TIPO (trabalho x pessoal) e PERÍODO do dia.
+   Eventos "pessoais" (chá de casa nova, aniversário…) não geram
+   valor e ficam de fora das telas financeiras — mas continuam
+   valendo para a agenda e para o alerta de conflito de horário.
+============================================================ */
+function isTrabalho(e){ return e.tipo!=='pessoal'; }
+function periodoLabel(p){
+  if(p==='manha') return 'Manhã';
+  if(p==='tarde') return 'Tarde';
+  if(p==='noite') return 'Noite';
+  return 'Dia todo';
+}
+function periodosConflitam(a,b){
+  var pa = a || 'dia-inteiro', pb = b || 'dia-inteiro';
+  if(pa==='dia-inteiro' || pb==='dia-inteiro') return true;
+  return pa===pb;
+}
+
 function conflitosDoMes(y,m){
   var evs = eventosDoMes(y,m);
   var byDate = {};
@@ -1075,7 +1119,16 @@ function conflitosDoMes(y,m){
     var lista = byDate[iso];
     ['vinicius','bia'].forEach(function(p){
       var evsPessoa = lista.filter(function(e){ return pessoasDoEvento(e).indexOf(p)>-1; });
-      if(evsPessoa.length>1) out.push({data:iso, pessoa:p, eventos:evsPessoa});
+      var conflitantes = [];
+      for(var i=0;i<evsPessoa.length;i++){
+        for(var j=i+1;j<evsPessoa.length;j++){
+          if(periodosConflitam(evsPessoa[i].periodo, evsPessoa[j].periodo)){
+            if(conflitantes.indexOf(evsPessoa[i])===-1) conflitantes.push(evsPessoa[i]);
+            if(conflitantes.indexOf(evsPessoa[j])===-1) conflitantes.push(evsPessoa[j]);
+          }
+        }
+      }
+      if(conflitantes.length>1) out.push({data:iso, pessoa:p, eventos:conflitantes});
     });
   });
   return out;
@@ -1090,7 +1143,7 @@ function saldoAtualCaixa(){
   // Dinheiro real em caixa: saldo inicial + tudo que já foi recebido − tudo
   // que já foi pago (histórico completo). Dinheiro investido NÃO entra aqui
   // de propósito — investimentos são tratados como "fora do caixa".
-  var totalRecebidoGeral = sum(state.eventos.filter(function(e){return e.status==='recebido';}).map(function(e){return e.valor;}));
+  var totalRecebidoGeral = sum(state.eventos.filter(function(e){return isTrabalho(e) && e.status==='recebido';}).map(function(e){return e.valor;}));
   var totalPagoGeral = sum(state.despesas.filter(function(d){return d.paga;}).map(function(d){return d.valor;}));
   return (Number(state.saldoInicial)||0) + totalRecebidoGeral - totalPagoGeral;
 }
@@ -1100,7 +1153,7 @@ function totalInvestido(){
 }
 
 function computeFinancials(y,m){
-  var evs = eventosDoMes(y,m);
+  var evs = eventosDoMes(y,m).filter(isTrabalho);
   var desp = despesasDoMes(y,m);
   var confirmado = sum(evs.filter(function(e){return e.status==='confirmado';}).map(function(e){return e.valor;}));
   var pendente   = sum(evs.filter(function(e){return e.status==='pendente';}).map(function(e){return e.valor;}));
@@ -1128,7 +1181,7 @@ function mediaMensalLiquida(){
   for(var i=0;i<3;i++){
     var y = d.getFullYear(), m = d.getMonth()-i;
     while(m<0){ m+=12; y--; }
-    var evs = eventosDoMes(y,m);
+    var evs = eventosDoMes(y,m).filter(isTrabalho);
     var desp = despesasDoMes(y,m);
     if(!evs.length && !desp.length) continue;
     var receitaMes = sum(evs.filter(function(e){return e.status!=='pendente';}).map(function(e){return e.valor;}));
@@ -1236,7 +1289,7 @@ function renderDashboard(){
   document.getElementById('dash-proj-otim').textContent = fmtBRL(f.projecaoOtimista);
   document.getElementById('dash-investido').textContent = fmtBRL(totalInvestido());
 
-  var receber = state.eventos.filter(function(e){ return e.status!=='recebido'; })
+  var receber = state.eventos.filter(function(e){ return isTrabalho(e) && e.status!=='recebido'; })
     .sort(function(a,b){return a.data.localeCompare(b.data);})
     .slice(0,6);
   document.getElementById('dash-list-receber').innerHTML = receber.length ? receber.map(rowEvento).join('') :
@@ -1250,17 +1303,24 @@ function renderDashboard(){
 }
 
 function rowEvento(e){
+  var isPessoal = !isTrabalho(e);
   var sign = e.status==='recebido' ? 'pos' : '';
+  var subParts = [];
+  if(!isPessoal) subParts.push(escapeHtml(e.cliente||'—'));
+  subParts.push(fmtDateShort(e.data));
+  subParts.push(periodoLabel(e.periodo));
+  subParts.push(pessoaTexto(e));
+  var rightBlock = isPessoal
+    ? '<span class="badge pessoal">Pessoal</span>'
+    : ('<div class="row-value '+sign+'">'+fmtBRL(e.valor)+'</div>'+
+       '<span class="badge '+e.status+'" style="margin-top:4px;">'+statusLabel(e.status)+'</span>');
   return '<div class="row" data-open-evento="'+e.id+'">'+
-    '<div class="stripe '+e.status+'"></div>'+
+    '<div class="stripe '+(isPessoal?'pessoal':e.status)+'"></div>'+
     '<div class="row-body">'+
       '<div class="row-title">'+escapeHtml(e.titulo||'Sem título')+'</div>'+
-      '<div class="row-sub">'+escapeHtml(e.cliente||'—')+' · '+fmtDateShort(e.data)+' · '+pessoaTexto(e)+'</div>'+
+      '<div class="row-sub">'+subParts.join(' · ')+'</div>'+
     '</div>'+
-    '<div style="text-align:right;">'+
-      '<div class="row-value '+sign+'">'+fmtBRL(e.valor)+'</div>'+
-      '<span class="badge '+e.status+'" style="margin-top:4px;">'+statusLabel(e.status)+'</span>'+
-    '</div>'+
+    '<div style="text-align:right;">'+rightBlock+'</div>'+
   '</div>';
 }
 
@@ -1408,7 +1468,7 @@ function renderAgenda(){
 var finTab = 'receitas';
 function renderFinanceiro(){
   renderMonthNav('fin-month-nav');
-  var receitas = eventosDoMes(viewYear, viewMonth);
+  var receitas = eventosDoMes(viewYear, viewMonth).filter(isTrabalho);
   var despesas = despesasDoMes(viewYear, viewMonth);
 
   document.getElementById('fin-receitas-count').textContent = receitas.length ? receitas.length+' item(ns)' : '';
@@ -1544,6 +1604,10 @@ function openEventoModal(id, prefillDate){
     document.getElementById('evento-valor').value = e.valor||'';
     document.getElementById('evento-local').value = e.local||'';
     document.getElementById('evento-notas').value = e.notas||'';
+    var radioTipo = document.querySelector('input[name="evento-tipo"][value="'+(e.tipo||'trabalho')+'"]');
+    if(radioTipo) radioTipo.checked = true;
+    var radioPeriodo = document.querySelector('input[name="evento-periodo"][value="'+(e.periodo||'dia-inteiro')+'"]');
+    if(radioPeriodo) radioPeriodo.checked = true;
     var radio = document.querySelector('input[name="evento-status"][value="'+(e.status||'confirmado')+'"]');
     if(radio) radio.checked = true;
     var radioResp = document.querySelector('input[name="evento-responsavel"][value="'+(e.responsavel||'ambos')+'"]');
@@ -1553,6 +1617,10 @@ function openEventoModal(id, prefillDate){
     document.getElementById('modal-evento-title').textContent = 'Novo evento';
     document.getElementById('evento-id').value = '';
     document.getElementById('evento-data').value = prefillDate || '';
+    var rTipo = document.querySelector('input[name="evento-tipo"][value="trabalho"]');
+    if(rTipo) rTipo.checked = true;
+    var rPeriodo = document.querySelector('input[name="evento-periodo"][value="dia-inteiro"]');
+    if(rPeriodo) rPeriodo.checked = true;
     var r2 = document.querySelector('input[name="evento-status"][value="confirmado"]');
     if(r2) r2.checked = true;
     var r2Resp = document.querySelector('input[name="evento-responsavel"][value="ambos"]');
@@ -1560,7 +1628,16 @@ function openEventoModal(id, prefillDate){
     document.getElementById('btn-evento-excluir').style.display = 'none';
   }
   updateStatusPickerClasses();
+  updateEventoTipoUI();
   openModal('modal-evento');
+}
+function updateEventoTipoUI(){
+  var tipoEl = document.querySelector('input[name="evento-tipo"]:checked');
+  var isPessoal = tipoEl ? tipoEl.value==='pessoal' : false;
+  document.getElementById('field-evento-valor').style.display = isPessoal ? 'none' : '';
+  document.getElementById('label-evento-titulo').textContent = isPessoal ? 'Nome do evento' : 'Nome do trabalho';
+  document.getElementById('evento-titulo').placeholder = isPessoal ? 'Ex: Chá de casa nova, Aniversário…' : 'Ex: Casamento Ana & Rafa, Ensaio corporativo…';
+  if(isPessoal) clearFieldError('field-evento-valor');
 }
 function updateStatusPickerClasses(){
   document.querySelectorAll('.status-picker label').forEach(function(lab){
@@ -1573,6 +1650,12 @@ document.querySelectorAll('#form-evento input[name="evento-status"]').forEach(fu
 });
 document.querySelectorAll('#form-evento input[name="evento-responsavel"]').forEach(function(r){
   r.addEventListener('change', updateStatusPickerClasses);
+});
+document.querySelectorAll('#form-evento input[name="evento-periodo"]').forEach(function(r){
+  r.addEventListener('change', updateStatusPickerClasses);
+});
+document.querySelectorAll('#form-evento input[name="evento-tipo"]').forEach(function(r){
+  r.addEventListener('change', function(){ updateStatusPickerClasses(); updateEventoTipoUI(); });
 });
 document.querySelectorAll('#form-despesa input[name="despesa-tipo"]').forEach(function(r){
   r.addEventListener('change', function(){
@@ -1588,24 +1671,31 @@ document.getElementById('btn-evento-cancelar').addEventListener('click', functio
 
 document.getElementById('form-evento').addEventListener('submit', function(ev){
   ev.preventDefault();
+  var tipoEl = document.querySelector('input[name="evento-tipo"]:checked');
+  var tipo = tipoEl ? tipoEl.value : 'trabalho';
+  var isPessoal = tipo === 'pessoal';
+  var periodoEl = document.querySelector('input[name="evento-periodo"]:checked');
+
   var titulo = document.getElementById('evento-titulo').value.trim();
   var data = document.getElementById('evento-data').value;
   var valorRaw = document.getElementById('evento-valor').value;
-  var valor = parseFloat(valorRaw);
+  var valor = isPessoal ? 0 : parseFloat(valorRaw);
   var statusEl = document.querySelector('input[name="evento-status"]:checked');
   var responsavelEl = document.querySelector('input[name="evento-responsavel"]:checked');
 
   var ok = true;
   if(!titulo){ setFieldError('field-evento-titulo'); ok=false; } else clearFieldError('field-evento-titulo');
   if(!data){ setFieldError('field-evento-data'); ok=false; } else clearFieldError('field-evento-data');
-  if(!(valor>=0) || valorRaw===''){ setFieldError('field-evento-valor'); ok=false; } else clearFieldError('field-evento-valor');
+  if(!isPessoal && (!(valor>=0) || valorRaw==='')){ setFieldError('field-evento-valor'); ok=false; } else clearFieldError('field-evento-valor');
   if(!ok) return;
 
   var payload = {
+    tipo: tipo,
     titulo: titulo,
     cliente: document.getElementById('evento-cliente').value.trim(),
     data: data,
-    valor: valor,
+    periodo: periodoEl ? periodoEl.value : 'dia-inteiro',
+    valor: isPessoal ? 0 : valor,
     status: statusEl ? statusEl.value : 'confirmado',
     responsavel: responsavelEl ? responsavelEl.value : 'ambos',
     local: document.getElementById('evento-local').value.trim(),
@@ -2161,7 +2251,7 @@ var FIREBASE_CONFIG = {
 };
 
 // E-mail fixo da "conta" compartilhada — não precisa existir de verdade.
-var SHARED_LOGIN_EMAIL = 'viniciusvanec@gmail.com';
+var SHARED_LOGIN_EMAIL = 'equipe@estudiovbo.app';
 
 var loginForm = document.getElementById('form-login');
 var loginSenhaInput = document.getElementById('login-senha');
