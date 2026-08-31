@@ -532,6 +532,7 @@ main.view.active{display:block;}
         <span class="label">Total investido (registrado)</span>
         <div class="value num" id="fin-total-investido">R$ 0,00</div>
         <div class="sub">não entra no saldo em caixa nem nas contas de compras futuras</div>
+        <div class="sub" id="fin-investido-por-pessoa" style="margin-top:6px;font-weight:600;"></div>
       </div>
       <div class="section-head" style="margin-top:0;"><h2>Seus investimentos</h2><span class="count" id="fin-investimentos-count"></span></div>
       <div class="list" id="fin-list-investimentos"></div>
@@ -737,6 +738,14 @@ main.view.active{display:block;}
         <input type="text" id="investimento-nome" placeholder="Ex: Reserva de emergência, Tesouro Selic…">
         <div class="field-error">Informe um nome.</div>
       </div>
+      <div class="field">
+        <label>De quem é</label>
+        <div class="status-picker">
+          <label class="opt-vinicius"><input type="radio" name="investimento-dono" value="vinicius">Vinicius</label>
+          <label class="opt-bia"><input type="radio" name="investimento-dono" value="bia">Bia</label>
+        </div>
+        <div class="hint">Contas separadas — usado pra mostrar o total investido de cada um.</div>
+      </div>
       <div class="field" id="field-investimento-valor">
         <label for="investimento-valor">Valor (R$)</label>
         <input type="number" step="0.01" min="0" id="investimento-valor" placeholder="0,00">
@@ -857,6 +866,16 @@ main.view.active{display:block;}
         <input type="number" min="1" max="31" step="1" id="fixa-dia" placeholder="Ex: 10">
         <div class="hint">Se o mês não tiver esse dia, usamos o último dia do mês.</div>
         <div class="field-error">Informe um dia entre 1 e 31.</div>
+      </div>
+      <div class="field">
+        <label for="fixa-inicio">Começa a valer em</label>
+        <input type="date" id="fixa-inicio">
+        <div class="hint">Meses antes desse mês não são gerados nem contam como vencidos ou no saldo — use o mês em que vocês começaram a usar o app.</div>
+      </div>
+      <div class="field">
+        <label for="fixa-fim">Termina em (opcional)</label>
+        <input type="date" id="fixa-fim">
+        <div class="hint">Deixe em branco se não tem data pra acabar (ex: aluguel). Preencha para financiamentos com parcelas contadas.</div>
       </div>
       <div class="btn-row" style="margin-top:6px;">
         <button type="button" class="btn btn-danger" id="btn-fixa-excluir" style="display:none;">Excluir</button>
@@ -1151,6 +1170,14 @@ function saldoAtualCaixa(){
 function totalInvestido(){
   return sum(state.investimentos.map(function(i){return i.valor;}));
 }
+function totalInvestidoPorPessoa(){
+  var out = {vinicius:0, bia:0};
+  state.investimentos.forEach(function(i){
+    var d = i.dono==='bia' ? 'bia' : 'vinicius';
+    out[d] += Number(i.valor)||0;
+  });
+  return out;
+}
 
 function computeFinancials(y,m){
   var evs = eventosDoMes(y,m).filter(isTrabalho);
@@ -1201,10 +1228,26 @@ function clampDiaNoMes(y,m,dia){
   var ultimoDia = new Date(y, m+1, 0).getDate();
   return Math.min(Math.max(parseInt(dia,10)||1,1), ultimoDia);
 }
+/* Um template só gera despesa no mês (y,m) se esse mês estiver dentro da
+   vigência configurada (dataInicio/dataFim, comparados só por ano+mês).
+   Sem dataInicio definida (templates antigos que ainda não foram
+   reeditados), não há restrição — mantém o comportamento anterior. */
+function mesDentroDaVigencia(y,m,t){
+  if(t.dataInicio){
+    var di = dateFromISO(t.dataInicio);
+    if(y<di.getFullYear() || (y===di.getFullYear() && m<di.getMonth())) return false;
+  }
+  if(t.dataFim){
+    var df = dateFromISO(t.dataFim);
+    if(y>df.getFullYear() || (y===df.getFullYear() && m>df.getMonth())) return false;
+  }
+  return true;
+}
 function ensureDespesasFixasGeradas(y,m){
   if(!state.despesasFixas.length) return;
   var mudou = false;
   state.despesasFixas.forEach(function(t){
+    if(!mesDentroDaVigencia(y,m,t)) return;
     var jaExiste = state.despesas.some(function(d){
       if(d.origemTemplateId!==t.id || !d.vencimento) return false;
       var dt = dateFromISO(d.vencimento);
@@ -1342,11 +1385,12 @@ function rowDespesa(d){
 }
 
 function rowInvestimento(inv){
+  var donoTxt = inv.dono==='bia' ? 'Bia' : 'Vinicius';
   return '<div class="row" data-open-investimento="'+inv.id+'">'+
     '<div class="stripe" style="background:var(--info);"></div>'+
     '<div class="row-body">'+
       '<div class="row-title">'+escapeHtml(inv.nome||'Sem nome')+'</div>'+
-      '<div class="row-sub">'+escapeHtml(inv.tipo||'Outro')+' · '+fmtDateShort(inv.data)+'</div>'+
+      '<div class="row-sub">'+escapeHtml(inv.tipo||'Outro')+' · '+fmtDateShort(inv.data)+' · '+donoTxt+'</div>'+
     '</div>'+
     '<div class="row-value">'+fmtBRL(inv.valor)+'</div>'+
   '</div>';
@@ -1383,11 +1427,13 @@ function rowCompraComprada(item){
 }
 
 function rowDespesaFixa(t){
+  var vigencia = t.dataInicio ? ' · desde '+fmtDateShort(t.dataInicio) : '';
+  vigencia += t.dataFim ? ' até '+fmtDateShort(t.dataFim) : '';
   return '<div class="row" data-open-fixa="'+t.id+'">'+
     '<div class="stripe despesa"></div>'+
     '<div class="row-body">'+
       '<div class="row-title">'+escapeHtml(t.descricao||'Sem nome')+'</div>'+
-      '<div class="row-sub">'+escapeHtml(t.categoria||'Outros')+' · todo dia '+t.diaVencimento+'</div>'+
+      '<div class="row-sub">'+escapeHtml(t.categoria||'Outros')+' · todo dia '+t.diaVencimento+vigencia+'</div>'+
     '</div>'+
     '<div class="row-value neg">'+fmtBRL(t.valor)+'</div>'+
   '</div>';
@@ -1487,6 +1533,9 @@ function renderFinanceiro(){
 function renderInvestimentos(){
   var lista = state.investimentos.slice().sort(function(a,b){ return (b.data||'').localeCompare(a.data||''); });
   document.getElementById('fin-total-investido').textContent = fmtBRL(totalInvestido());
+  var porPessoa = totalInvestidoPorPessoa();
+  document.getElementById('fin-investido-por-pessoa').textContent =
+    lista.length ? 'Vinicius: '+fmtBRL(porPessoa.vinicius)+'  ·  Bia: '+fmtBRL(porPessoa.bia) : '';
   document.getElementById('fin-investimentos-count').textContent = lista.length ? lista.length+' item(ns)' : '';
   document.getElementById('fin-list-investimentos').innerHTML = lista.length ? lista.map(rowInvestimento).join('') :
     '<div class="empty-state">Nenhum investimento cadastrado ainda.</div>';
@@ -1823,15 +1872,23 @@ function openInvestimentoModal(id){
     document.getElementById('investimento-data').value = inv.data||'';
     document.getElementById('investimento-tipo').value = inv.tipo||'';
     document.getElementById('investimento-notas').value = inv.notas||'';
+    var radioDono = document.querySelector('input[name="investimento-dono"][value="'+(inv.dono||'vinicius')+'"]');
+    if(radioDono) radioDono.checked = true;
     document.getElementById('btn-investimento-excluir').style.display = 'inline-flex';
   } else {
     document.getElementById('modal-investimento-title').textContent = 'Novo investimento';
     document.getElementById('investimento-id').value = '';
     document.getElementById('investimento-data').value = todayISO();
+    var rDono = document.querySelector('input[name="investimento-dono"][value="vinicius"]');
+    if(rDono) rDono.checked = true;
     document.getElementById('btn-investimento-excluir').style.display = 'none';
   }
+  updateStatusPickerClasses();
   openModal('modal-investimento');
 }
+document.querySelectorAll('#form-investimento input[name="investimento-dono"]').forEach(function(r){
+  r.addEventListener('change', updateStatusPickerClasses);
+});
 document.getElementById('btn-add-investimento').addEventListener('click', function(){ openInvestimentoModal(null); });
 document.getElementById('btn-investimento-cancelar').addEventListener('click', function(){ closeModal('modal-investimento'); });
 
@@ -1846,8 +1903,11 @@ document.getElementById('form-investimento').addEventListener('submit', function
   if(!(valor>=0) || valorRaw===''){ setFieldError('field-investimento-valor'); ok=false; } else clearFieldError('field-investimento-valor');
   if(!ok) return;
 
+  var donoEl = document.querySelector('input[name="investimento-dono"]:checked');
+
   var payload = {
     nome: nome,
+    dono: donoEl ? donoEl.value : 'vinicius',
     valor: valor,
     data: document.getElementById('investimento-data').value || todayISO(),
     tipo: document.getElementById('investimento-tipo').value.trim() || 'Outro',
@@ -1983,10 +2043,14 @@ function openFixaFormModal(id){
     document.getElementById('fixa-categoria').value = t.categoria||'';
     document.getElementById('fixa-valor').value = t.valor||'';
     document.getElementById('fixa-dia').value = t.diaVencimento||'';
+    document.getElementById('fixa-inicio').value = t.dataInicio || isoFromParts(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('fixa-fim').value = t.dataFim || '';
     document.getElementById('btn-fixa-excluir').style.display = 'inline-flex';
   } else {
     document.getElementById('modal-fixa-form-title').textContent = 'Nova despesa fixa';
     document.getElementById('fixa-id').value = '';
+    document.getElementById('fixa-inicio').value = isoFromParts(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('fixa-fim').value = '';
     document.getElementById('btn-fixa-excluir').style.display = 'none';
   }
   openModal('modal-fixa-form');
@@ -2000,6 +2064,8 @@ document.getElementById('form-fixa').addEventListener('submit', function(ev){
   var valor = parseFloat(valorRaw);
   var diaRaw = document.getElementById('fixa-dia').value;
   var dia = parseInt(diaRaw,10);
+  var dataInicio = document.getElementById('fixa-inicio').value || null;
+  var dataFim = document.getElementById('fixa-fim').value || null;
 
   var ok = true;
   if(!descricao){ setFieldError('field-fixa-descricao'); ok=false; } else clearFieldError('field-fixa-descricao');
@@ -2011,12 +2077,23 @@ document.getElementById('form-fixa').addEventListener('submit', function(ev){
     descricao: descricao,
     categoria: document.getElementById('fixa-categoria').value.trim() || 'Outros',
     valor: valor,
-    diaVencimento: dia
+    diaVencimento: dia,
+    dataInicio: dataInicio,
+    dataFim: dataFim
   };
 
   if(editingFixaId){
     var idx = state.despesasFixas.findIndex(function(x){return x.id===editingFixaId;});
     if(idx>-1) state.despesasFixas[idx] = Object.assign(state.despesasFixas[idx], payload);
+    // Remove instâncias ainda não pagas que ficaram fora da nova vigência
+    // (ex: meses retroativos gerados antes de definir "Começa a valer em").
+    // Contas já pagas nunca são tocadas — o histórico real fica intacto.
+    state.despesas = state.despesas.filter(function(d){
+      if(d.origemTemplateId!==editingFixaId || d.paga) return true;
+      if(dataInicio && d.vencimento < dataInicio) return false;
+      if(dataFim && d.vencimento > dataFim) return false;
+      return true;
+    });
   } else {
     payload.id = uid();
     state.despesasFixas.push(payload);
