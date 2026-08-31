@@ -2250,7 +2250,7 @@ var FIREBASE_CONFIG = {
   appId: "1:981158120875:web:aa45483f17d438bd7396ee"
 };
 
-// E-mail fixo da "conta" compartilhada — não precisa existir de verdade.
+// E-mail fixo usado para o login compartilhado (a senha é o que importa).
 var SHARED_LOGIN_EMAIL = 'viniciusvanec@gmail.com';
 
 var loginForm = document.getElementById('form-login');
@@ -2316,6 +2316,32 @@ if(!isConfigured){
     }
   });
 
+  var loginErrorEl = document.querySelector('#field-login-senha .field-error');
+
+  function loginErrorMessage(err){
+    var code = err && err.code ? err.code : '';
+    console.error('Estúdio VBO: falha no login', code, err);
+    if(code==='auth/wrong-password' || code==='auth/invalid-credential' || code==='auth/invalid-login-credentials'){
+      return 'Senha incorreta. Tente novamente.';
+    }
+    if(code==='auth/user-not-found'){
+      return 'Esse usuário ainda não existe no Firebase. Confira Authentication → Users e o e-mail cadastrado (deve ser exatamente '+SHARED_LOGIN_EMAIL+').';
+    }
+    if(code==='auth/too-many-requests'){
+      return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.';
+    }
+    if(code==='auth/network-request-failed'){
+      return 'Sem conexão com a internet. Verifique o Wi-Fi/dados e tente de novo.';
+    }
+    if(code==='auth/user-disabled'){
+      return 'Esse usuário foi desativado no Firebase (Authentication → Users).';
+    }
+    if(code==='auth/unauthorized-domain' || code==='auth/operation-not-allowed'){
+      return 'O acesso por e-mail/senha não está liberado para este site. Confira Authentication → Sign-in method e Authorized domains no Firebase.';
+    }
+    return 'Não foi possível entrar' + (code ? ' (' + code + ')' : '') + '. Verifique a configuração do Firebase ou tente novamente.';
+  }
+
   loginForm.addEventListener('submit', function(e){
     e.preventDefault();
     var senha = loginSenhaInput.value;
@@ -2323,7 +2349,8 @@ if(!isConfigured){
     loginField.classList.remove('has-error');
     loginBtn.disabled = true;
     loginBtn.textContent = 'Entrando…';
-    signInWithEmailAndPassword(auth, SHARED_LOGIN_EMAIL, senha).catch(function(){
+    signInWithEmailAndPassword(auth, SHARED_LOGIN_EMAIL, senha).catch(function(err){
+      if(loginErrorEl) loginErrorEl.textContent = loginErrorMessage(err);
       loginField.classList.add('has-error');
       loginBtn.disabled = false;
       loginBtn.textContent = 'Entrar';
