@@ -1,5 +1,5 @@
-// v2 — muda o nome do cache para os celulares baixarem a versão nova.
-const CACHE = 'estudiovbo-shell-v2';
+// v3 — muda o nome do cache para os celulares baixarem a versão nova.
+const CACHE = 'estudiovbo-shell-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

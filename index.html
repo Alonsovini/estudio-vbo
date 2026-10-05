@@ -538,6 +538,17 @@ main.view.active{display:block;}
 .sync-pill.off i{background:var(--warning);}
 .info-note{font-size:12.5px;color:var(--text-muted);background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;margin-top:10px;line-height:1.45;}
 
+.link-box{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:13px;}
+.link-box b{display:block;font-size:13.5px;}
+.link-box span{color:var(--text-muted);font-size:12px;}
+.link-box button{flex-shrink:0;border:none;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:12.5px;border-radius:8px;padding:8px 10px;}
+.puxar-box{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px 2px;margin-bottom:14px;}
+.puxar-box .field{margin-bottom:8px;}
+.hint-accent{font-size:12px;color:var(--accent);margin:-6px 0 12px;font-weight:600;}
+#toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:90;
+  background:var(--text);color:var(--bg);font-size:13px;font-weight:600;padding:11px 16px;border-radius:12px;box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 ::-webkit-scrollbar{width:0;height:0;}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
 </style>
@@ -847,6 +858,7 @@ main.view.active{display:block;}
         <label for="evento-notas">Notas (opcional)</label>
         <textarea id="evento-notas" placeholder="Equipamentos, equipe, observações…"></textarea>
       </div>
+      <div id="evento-quadro-box"></div>
       <div class="btn-row" style="margin-top:6px;">
         <button type="button" class="btn btn-danger" id="btn-evento-excluir" style="display:none;">Excluir</button>
         <button type="button" class="btn btn-ghost" id="btn-evento-cancelar">Cancelar</button>
@@ -1076,6 +1088,14 @@ main.view.active{display:block;}
     <h3 id="modal-card-title">Novo cartão</h3>
     <form id="form-card" novalidate>
       <input type="hidden" id="card-id">
+      <div id="card-link-info"></div>
+      <div class="puxar-box" id="card-puxar-wrap" style="display:none;">
+        <div class="field">
+          <label for="card-puxar" id="card-puxar-label">Puxar um trampo da agenda</label>
+          <select id="card-puxar"></select>
+          <div class="hint">Escolha um evento do calendário e o cartão já vem preenchido e ligado a ele.</div>
+        </div>
+      </div>
       <div class="field" id="field-card-titulo">
         <label for="card-titulo">Título</label>
         <input type="text" id="card-titulo" placeholder="Ex: Orçamento vídeo GoldKo, Edição ep. 3…">
@@ -1100,15 +1120,21 @@ main.view.active{display:block;}
           </select>
         </div>
       </div>
+      <div class="hint-accent" id="card-fechado-hint" style="display:none;">📅 Em "Fechado", o cartão vira evento confirmado na agenda na data do trabalho.</div>
       <div style="display:flex;gap:10px;">
-        <div class="field" style="flex:1;">
-          <label for="card-valor">Valor (R$)</label>
-          <input type="number" step="0.01" min="0" id="card-valor" placeholder="0,00">
+        <div class="field" style="flex:1;" id="field-card-data-evento">
+          <label for="card-data-evento">Data do trabalho</label>
+          <input type="date" id="card-data-evento">
+          <div class="field-error">Informe a data pra ir pra agenda.</div>
         </div>
         <div class="field" style="flex:1;">
           <label for="card-entrega">Data de entrega</label>
           <input type="date" id="card-entrega">
         </div>
+      </div>
+      <div class="field">
+        <label for="card-valor">Valor (R$)</label>
+        <input type="number" step="0.01" min="0" id="card-valor" placeholder="0,00">
       </div>
       <div class="field">
         <label>Responsável</label>
@@ -1131,6 +1157,8 @@ main.view.active{display:block;}
     </form>
   </div>
 </div>
+
+<div id="toast" role="status" aria-live="polite"></div>
 
 <!-- ===================== MODAL: FATURA ===================== -->
 <div class="modal-overlay" id="modal-fatura">
@@ -1867,6 +1895,8 @@ function rowEvento(e){
   subParts.push(e.hora ? e.hora : periodoLabel(e.periodo));
   subParts.push(pessoaTexto(e));
   if(!isPessoal && e.cliente) subParts.push(escapeHtml(e.cliente));
+  var cardLig = isPessoal ? null : cardDoEvento(e.id);
+  if(cardLig) subParts.push('🗂️ '+(COLUNA_NOME[cardLig.coluna]||''));
   var rightBlock = isPessoal
     ? '<span class="badge pessoal">Pessoal</span>'
     : ('<div class="row-value '+sign+'">'+fmtBRL(e.valor)+'</div>'+
@@ -2119,7 +2149,8 @@ function renderQuadro(){
         (c.cliente?'<div class="k-sub">'+escapeHtml(c.cliente)+'</div>':'')+
         '<div class="k-meta"><span class="k-who p-'+respKey(c)+'" title="'+PESSOA_NOME[respKey(c)]+'"></span>'+
           '<span class="k-tag">'+(TIPO_NOME[c.tipo]||'Outro')+'</span>'+
-          (st.txt?'<span class="k-date '+st.cls+'">📦 '+st.txt+'</span>':'')+
+          (c.dataEvento?'<span class="k-date" title="Data do trabalho">'+(c.eventoId?'📅 ':'🗓 ')+fmtDateShort(c.dataEvento)+'</span>':'')+
+          (st.txt?'<span class="k-date '+st.cls+'" title="Entrega">📦 '+st.txt+'</span>':'')+
           (Number(c.valor)?'<span class="k-val">'+fmtCompact(c.valor)+'</span>':'')+
         '</div>'+
       '</div>';
@@ -2132,39 +2163,166 @@ function renderQuadro(){
     '</div>';
   }).join('');
 }
+/* ============================================================
+   QUADRO ⇄ AGENDA
+   - O vínculo fica no cartão (card.eventoId).
+   - Cartão que chega em "Fechado" com data do trabalho vira evento
+     CONFIRMADO na agenda. Voltar pra "Orçando" deixa o evento pendente.
+   - Editar um lado atualiza o outro (título, cliente, valor, quem, data).
+   - Cartão pode "puxar" um trampo que já está no calendário.
+============================================================ */
+var toastTimer = null;
+function toast(msg){
+  var el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3200);
+}
+function cardDoEvento(eid){ return state.cards.find(function(c){ return c.eventoId===eid; }) || null; }
+function eventoDoCard(c){ return (c && c.eventoId) ? (state.eventos.find(function(e){ return e.id===c.eventoId; }) || null) : null; }
+
+function syncEventoFromCard(c){
+  var e = eventoDoCard(c);
+  if(c.eventoId && !e) delete c.eventoId;
+  if(e){
+    e.titulo = c.titulo; e.cliente = c.cliente || '';
+    e.responsavel = c.responsavel || e.responsavel;
+    if(Number(c.valor)) e.valor = Number(c.valor);
+    if(c.dataEvento) e.data = c.dataEvento;
+    if(c.coluna==='orcando'){ if(e.status==='confirmado') e.status = 'pendente'; }
+    else if(e.status==='pendente') e.status = 'confirmado';
+    return 'atualizado';
+  }
+  if(c.coluna==='fechado' && c.dataEvento && !c.semEvento){
+    var ne = { id: uid(), tipo:'trabalho', titulo: c.titulo, cliente: c.cliente||'', data: c.dataEvento,
+      periodo:'dia-inteiro', hora:'', valor: Number(c.valor)||0, status:'confirmado',
+      responsavel: c.responsavel||'ambos', local:'', notas: c.notas||'' };
+    state.eventos.push(ne);
+    c.eventoId = ne.id;
+    return 'criado';
+  }
+  return null;
+}
+function syncCardFromEvento(e){
+  var c = cardDoEvento(e.id);
+  if(!c) return;
+  c.titulo = e.titulo; c.cliente = e.cliente || '';
+  c.responsavel = e.responsavel || c.responsavel;
+  if(Number(e.valor)) c.valor = Number(e.valor);
+  c.dataEvento = e.data;
+  if(c.coluna==='orcando' && e.status!=='pendente') c.coluna = 'fechado';
+  else if(c.coluna==='fechado' && e.status==='pendente') c.coluna = 'orcando';
+}
+function avisoSync(res, c){
+  if(res==='criado') toast('📅 Evento confirmado na agenda · '+fmtDateShort(c.dataEvento));
+  else if(res==='atualizado') toast('📅 Agenda atualizada');
+  else if(c.coluna==='fechado' && !c.dataEvento && !c.eventoId) toast('Sem data do trabalho — não foi pra agenda ainda');
+}
+
 function moverCard(id, coluna){
   var c = state.cards.find(function(x){ return x.id===id; });
   if(!c || c.coluna===coluna) return;
+  if(coluna==='fechado' && !c.eventoId && !c.dataEvento && !c.semEvento){
+    // precisa da data do trabalho pra ir pra agenda: abre o cartão já em "Fechado"
+    openCardModal(id, null, {coluna:'fechado', pedirData:true});
+    return;
+  }
   c.coluna = coluna;
   if(coluna==='entregue') c.entregueEm = todayISO(); else delete c.entregueEm;
+  var res = syncEventoFromCard(c);
   saveState(); renderAll();
+  avisoSync(res, c);
 }
 
 var editingCardId = null;
-function openCardModal(id, coluna){
+var puxarEventos = [];
+function eventosParaPuxar(){
+  var ligados = {};
+  state.cards.forEach(function(c){ if(c.eventoId) ligados[c.eventoId] = true; });
+  var limite = (function(){ var d = new Date(); d.setDate(d.getDate()-120); return isoFromParts(d.getFullYear(), d.getMonth(), d.getDate()); })();
+  return state.eventos.filter(function(e){ return isTrabalho(e) && !ligados[e.id] && e.data >= limite; })
+    .sort(function(a,b){ return b.data.localeCompare(a.data); });
+}
+function openCardModal(id, coluna, opts){
+  opts = opts || {};
   editingCardId = id || null;
   var form = document.getElementById('form-card');
   form.reset();
-  clearFieldError('field-card-titulo');
+  clearFieldError('field-card-titulo'); clearFieldError('field-card-data-evento');
   document.getElementById('card-coluna').innerHTML = COLUNAS.map(function(c){ return '<option value="'+c.k+'">'+c.t+'</option>'; }).join('');
   var c = id ? state.cards.find(function(x){return x.id===id;}) : null;
   if(id && !c) return;
+  var col = opts.coluna || (c ? (c.coluna||'orcando') : (coluna||'orcando'));
   document.getElementById('modal-card-title').textContent = c ? 'Editar cartão' : 'Novo cartão';
   document.getElementById('card-id').value = c ? c.id : '';
   document.getElementById('card-titulo').value = c ? (c.titulo||'') : '';
   document.getElementById('card-cliente').value = c ? (c.cliente||'') : '';
-  document.getElementById('card-coluna').value = c ? (c.coluna||'orcando') : (coluna||'orcando');
-  document.getElementById('card-tipo').value = c ? (c.tipo||'outro') : ((coluna==='edicao')?'edicao':'orcamento');
+  document.getElementById('card-coluna').value = col;
+  document.getElementById('card-tipo').value = c ? (c.tipo||'outro') : ((col==='edicao')?'edicao':(col==='orcando'?'orcamento':'captacao'));
   document.getElementById('card-valor').value = c && c.valor ? c.valor : '';
+  document.getElementById('card-data-evento').value = c ? (c.dataEvento||'') : '';
   document.getElementById('card-entrega').value = c ? (c.dataEntrega||'') : '';
   document.getElementById('card-notas').value = c ? (c.notas||'') : '';
   var resp = c ? respKey(c) : (quadroFilter!=='todos'?quadroFilter:'ambos');
   var r = document.querySelector('input[name="card-responsavel"][value="'+resp+'"]'); if(r) r.checked = true;
   document.getElementById('btn-card-excluir').style.display = c ? 'inline-flex' : 'none';
-  document.getElementById('btn-card-evento').style.display = (c && !c.eventoId) ? '' : 'none';
+
+  // vínculo com a agenda
+  var ev = eventoDoCard(c);
+  var info = document.getElementById('card-link-info');
+  info.innerHTML = ev ? '<div class="link-box"><div><b>📅 Na agenda · '+fmtDateShort(ev.data)+'</b><span>'+escapeHtml(ev.titulo||'')+' · '+statusLabel(ev.status)+'</span></div>'+
+    '<button type="button" data-card-to-evento="'+ev.id+'">Abrir</button></div>' : '';
+  var wrap = document.getElementById('card-puxar-wrap');
+  var sel = document.getElementById('card-puxar');
+  sel.dataset.linkId = '';
+  puxarEventos = ev ? [] : eventosParaPuxar();
+  if(!ev && puxarEventos.length){
+    sel.innerHTML = '<option value="">— Não puxar, preencher à mão —</option>' + puxarEventos.map(function(e){
+      return '<option value="'+e.id+'">'+fmtDateShort(e.data)+' · '+escapeHtml(e.titulo||'Sem título')+' ('+PESSOA_NOME[respKey(e)]+')</option>';
+    }).join('');
+    document.getElementById('card-puxar-label').textContent = col==='edicao' ? 'Qual trampo vai pra edição?' : 'Puxar um trampo da agenda';
+    wrap.style.display = '';
+  } else wrap.style.display = 'none';
+  if(opts.fromEvento){
+    sel.innerHTML = '<option value="'+opts.fromEvento.id+'">'+fmtDateShort(opts.fromEvento.data)+' · '+escapeHtml(opts.fromEvento.titulo||'')+'</option>';
+    sel.value = opts.fromEvento.id; wrap.style.display = '';
+    puxarEventos = [opts.fromEvento];
+    aplicarPuxar(opts.fromEvento.id);
+  }
+  document.getElementById('btn-card-evento').style.display = (c && !ev && col!=='fechado') ? '' : 'none';
+  atualizarHintFechado();
   updateStatusPickerClasses();
   openModal('modal-card');
+  if(opts.pedirData){
+    setFieldError('field-card-data-evento');
+    setTimeout(function(){ document.getElementById('card-data-evento').focus(); }, 250);
+  }
 }
+function aplicarPuxar(eid){
+  var sel = document.getElementById('card-puxar');
+  sel.dataset.linkId = eid || '';
+  if(!eid) return;
+  var e = state.eventos.find(function(x){ return x.id===eid; });
+  if(!e) return;
+  document.getElementById('card-titulo').value = e.titulo || '';
+  document.getElementById('card-cliente').value = e.cliente || '';
+  if(Number(e.valor)) document.getElementById('card-valor').value = e.valor;
+  document.getElementById('card-data-evento').value = e.data || '';
+  var r = document.querySelector('input[name="card-responsavel"][value="'+respKey(e)+'"]'); if(r) r.checked = true;
+  var col = document.getElementById('card-coluna').value;
+  if(col==='edicao') document.getElementById('card-tipo').value = 'edicao';
+  clearFieldError('field-card-titulo');
+  updateStatusPickerClasses();
+}
+function atualizarHintFechado(){
+  var col = document.getElementById('card-coluna').value;
+  var c = editingCardId ? state.cards.find(function(x){return x.id===editingCardId;}) : null;
+  var ligado = !!eventoDoCard(c) || !!document.getElementById('card-puxar').dataset.linkId;
+  document.getElementById('card-fechado-hint').style.display = (col==='fechado' && !ligado) ? '' : 'none';
+}
+document.getElementById('card-puxar').addEventListener('change', function(e){ aplicarPuxar(e.target.value); atualizarHintFechado(); });
+document.getElementById('card-coluna').addEventListener('change', atualizarHintFechado);
+
 function lerCardForm(){
   var titulo = document.getElementById('card-titulo').value.trim();
   if(!titulo){ setFieldError('field-card-titulo'); return null; }
@@ -2177,38 +2335,46 @@ function lerCardForm(){
     coluna: document.getElementById('card-coluna').value,
     tipo: document.getElementById('card-tipo').value,
     valor: isNaN(v) ? 0 : v,
+    dataEvento: document.getElementById('card-data-evento').value,
     dataEntrega: document.getElementById('card-entrega').value,
     responsavel: respEl ? respEl.value : 'ambos',
     notas: document.getElementById('card-notas').value.trim()
   };
 }
+var ultimoSyncCard = null;
 function salvarCard(){
   var payload = lerCardForm();
   if(!payload) return null;
+  var linkId = document.getElementById('card-puxar').dataset.linkId;
   var c;
   if(editingCardId){
     c = state.cards.find(function(x){return x.id===editingCardId;});
-    if(c){
-      if(payload.coluna==='entregue' && c.coluna!=='entregue') payload.entregueEm = todayISO();
-      Object.assign(c, payload);
-    }
+    if(!c) return null;
+    if(payload.coluna==='entregue' && c.coluna!=='entregue') payload.entregueEm = todayISO();
+    if(payload.coluna!=='entregue') delete c.entregueEm;
+    Object.assign(c, payload);
   } else {
     payload.id = uid(); payload.criadoEm = new Date().toISOString();
     if(payload.coluna==='entregue') payload.entregueEm = todayISO();
     state.cards.push(payload); c = payload;
   }
+  if(linkId && !c.eventoId){ c.eventoId = linkId; delete c.semEvento; }
+  ultimoSyncCard = syncEventoFromCard(c);
   saveState();
   return c;
 }
 document.getElementById('form-card').addEventListener('submit', function(ev){
   ev.preventDefault();
-  if(salvarCard()){ closeModal('modal-card'); renderAll(); }
+  var c = salvarCard();
+  if(c){ closeModal('modal-card'); renderAll(); avisoSync(ultimoSyncCard, c); }
 });
 document.querySelectorAll('#form-card input[name="card-responsavel"]').forEach(function(r){ r.addEventListener('change', updateStatusPickerClasses); });
 document.getElementById('btn-card-cancelar').addEventListener('click', function(){ closeModal('modal-card'); });
 document.getElementById('btn-card-excluir').addEventListener('click', function(){
   var id = document.getElementById('card-id').value;
-  showConfirm('Excluir cartão', 'Deseja excluir este cartão do quadro?', function(){
+  var c = state.cards.find(function(x){ return x.id===id; });
+  var temEvento = !!eventoDoCard(c);
+  showConfirm('Excluir cartão', 'Deseja excluir este cartão do quadro?'+(temEvento?'\n\nO evento na agenda continua lá (exclua por lá se quiser).':''), function(){
     state.cards = state.cards.filter(function(c){ return c.id!==id; });
     saveState(); closeModal('modal-card'); renderAll();
   });
@@ -2216,8 +2382,9 @@ document.getElementById('btn-card-excluir').addEventListener('click', function()
 document.getElementById('btn-card-evento').addEventListener('click', function(){
   var c = salvarCard(); if(!c) return;
   closeModal('modal-card');
+  delete c.semEvento;
   pendingCardLink = c.id;
-  openEventoModal(null, c.dataEntrega || '', {
+  openEventoModal(null, c.dataEvento || c.dataEntrega || '', {
     titulo: c.titulo, cliente: c.cliente, valor: c.valor || '', responsavel: respKey(c),
     status: c.coluna==='orcando' ? 'pendente' : 'confirmado', notas: c.notas
   });
@@ -2450,6 +2617,7 @@ function openEventoModal(id, prefillDate, prefill){
     var radioResp = document.querySelector('input[name="evento-responsavel"][value="'+(e.responsavel||'ambos')+'"]');
     if(radioResp) radioResp.checked = true;
     document.getElementById('btn-evento-excluir').style.display = 'inline-flex';
+    renderEventoQuadroBox(e);
   } else {
     document.getElementById('modal-evento-title').textContent = 'Novo evento';
     document.getElementById('evento-id').value = '';
@@ -2470,10 +2638,19 @@ function openEventoModal(id, prefillDate, prefill){
     var r2Resp = document.querySelector('input[name="evento-responsavel"][value="'+defResp+'"]');
     if(r2Resp) r2Resp.checked = true;
     document.getElementById('btn-evento-excluir').style.display = 'none';
+    renderEventoQuadroBox(null);
   }
   updateStatusPickerClasses();
   updateEventoTipoUI();
   openModal('modal-evento');
+}
+function renderEventoQuadroBox(e){
+  var box = document.getElementById('evento-quadro-box');
+  if(!e || !isTrabalho(e)){ box.innerHTML = ''; return; }
+  var c = cardDoEvento(e.id);
+  box.innerHTML = c
+    ? '<div class="link-box"><div><b>🗂️ No Quadro · '+escapeHtml(COLUNA_NOME[c.coluna]||'')+'</b><span>'+(c.dataEntrega?'entrega '+fmtDateShort(c.dataEntrega):'sem data de entrega')+'</span></div><button type="button" data-evento-to-card="'+c.id+'">Abrir</button></div>'
+    : '<button type="button" class="add-btn" style="margin:0 0 14px;" data-evento-novo-card="'+e.id+'">🗂️ Criar cartão no Quadro (edição, entrega…)</button>';
 }
 function updateEventoTipoUI(){
   var tipoEl = document.querySelector('input[name="evento-tipo"]:checked');
@@ -2548,13 +2725,13 @@ document.getElementById('form-evento').addEventListener('submit', function(ev){
 
   if(editingEventoId){
     var idx = state.eventos.findIndex(function(x){return x.id===editingEventoId;});
-    if(idx>-1) state.eventos[idx] = Object.assign(state.eventos[idx], payload);
+    if(idx>-1){ state.eventos[idx] = Object.assign(state.eventos[idx], payload); syncCardFromEvento(state.eventos[idx]); }
   } else {
     payload.id = uid();
     state.eventos.push(payload);
     if(pendingCardLink){
       var card = state.cards.find(function(c){ return c.id===pendingCardLink; });
-      if(card) card.eventoId = payload.id;
+      if(card){ card.eventoId = payload.id; delete card.semEvento; syncCardFromEvento(payload); }
     }
   }
   pendingCardLink = null;
@@ -2565,8 +2742,9 @@ document.getElementById('form-evento').addEventListener('submit', function(ev){
 
 document.getElementById('btn-evento-excluir').addEventListener('click', function(){
   var id = document.getElementById('evento-id').value;
-  showConfirm('Excluir evento', 'Essa ação não pode ser desfeita. Deseja excluir este evento?', function(){
+  showConfirm('Excluir evento', 'Essa ação não pode ser desfeita. Deseja excluir este evento?'+(cardDoEvento(id)?'\n\nO cartão no Quadro continua lá, só deixa de estar ligado à agenda.':''), function(){
     state.eventos = state.eventos.filter(function(e){return e.id!==id;});
+    state.cards.forEach(function(c){ if(c.eventoId===id){ delete c.eventoId; c.semEvento = true; } });
     saveState(); closeModal('modal-evento'); renderAll();
   });
 });
@@ -2941,6 +3119,20 @@ document.addEventListener('click', function(e){
     return;
   }
 
+  var c2e = t.closest('[data-card-to-evento]');
+  if(c2e){ closeModal('modal-card'); openEventoModal(c2e.dataset.cardToEvento); return; }
+  var e2c = t.closest('[data-evento-to-card]');
+  if(e2c){ closeModal('modal-evento'); openCardModal(e2c.dataset.eventoToCard); return; }
+  var e2n = t.closest('[data-evento-novo-card]');
+  if(e2n){
+    var evx = state.eventos.find(function(x){ return x.id===e2n.dataset.eventoNovoCard; });
+    if(evx){
+      closeModal('modal-evento');
+      var colx = evx.status==='pendente' ? 'orcando' : (evx.data >= todayISO() ? 'fechado' : 'edicao');
+      openCardModal(null, colx, {fromEvento: evx});
+    }
+    return;
+  }
   var evRow = t.closest('[data-open-evento]');
   if(evRow){ openEventoModal(evRow.dataset.openEvento); return; }
 
