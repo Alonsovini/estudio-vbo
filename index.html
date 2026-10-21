@@ -549,6 +549,45 @@ main.view.active{display:block;}
   background:var(--text);color:var(--bg);font-size:13px;font-weight:600;padding:11px 16px;border-radius:12px;box-shadow:var(--shadow);
   opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);text-align:center;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* v4 — tipos de trabalho, relatórios, calculadora */
+.topbar-actions{display:flex;gap:8px;}
+.status-picker label.opt-esc.checked{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+.status-picker.small label{font-size:11px;min-height:42px;padding:0 4px;}
+.rel-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+.rel-kpis .card{padding:11px 12px;}
+.rel-kpis .label{font-size:10.5px;display:block;margin-bottom:4px;}
+.rel-kpis .v{font-family:var(--font-mono);font-size:15px;font-weight:600;}
+.rel-kpis .s{font-size:11px;color:var(--text-faint);margin-top:2px;}
+.rel-row{padding:9px 0;border-top:1px solid var(--border);cursor:default;}
+.rel-row:first-of-type{border-top:none;}
+.rel-row .top{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;}
+.rel-row .top b{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rel-row .top span{font-family:var(--font-mono);font-weight:600;flex-shrink:0;}
+.rel-row .bar{height:8px;border-radius:4px;background:var(--surface-2);margin:6px 0 4px;overflow:hidden;}
+.rel-row .bar i{display:block;height:100%;border-radius:0 4px 4px 0;background:var(--accent);}
+.rel-row .meta{font-size:11.5px;color:var(--text-muted);}
+.rel-caption{font-size:12.5px;color:var(--text-muted);text-align:center;margin-top:6px;min-height:18px;}
+.rel-caption b{color:var(--text);font-family:var(--font-mono);}
+.rel-note{font-size:12px;color:var(--text-muted);background:var(--warning-soft);border-radius:var(--radius-sm);padding:9px 12px;margin-top:10px;}
+.calc-sec{border-top:1px solid var(--border);padding-top:12px;margin-top:4px;}
+.calc-sec > .label{display:block;margin-bottom:8px;}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px;}
+.calc-grid .field{margin-bottom:10px;}
+.calc-result{background:linear-gradient(155deg,var(--accent-soft),var(--surface) 70%);border:1.5px solid var(--accent);border-radius:var(--radius);padding:14px;margin:14px 0 12px;}
+.calc-result .big{font-family:var(--font-mono);font-size:30px;font-weight:600;color:var(--accent);letter-spacing:-.02em;}
+.calc-line{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--text-muted);}
+.calc-line span:last-child{font-family:var(--font-mono);color:var(--text);}
+.calc-line.tot{border-top:1px solid var(--border);margin-top:4px;padding-top:6px;font-weight:600;color:var(--text);}
+.calc-sticky{position:sticky;bottom:calc(-22px - env(safe-area-inset-bottom));margin:0 -20px;padding:10px 20px calc(12px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2;}
+.calc-sticky .v{font-family:var(--font-mono);font-size:20px;font-weight:600;color:var(--accent);}
+.calc-sticky .t{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);font-weight:600;}
+.calc-hist{font-size:12.5px;color:var(--text-muted);background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;line-height:1.5;}
+.calc-hist b{color:var(--text);}
+details.precos{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;margin:10px 0 14px;}
+details.precos summary{font-weight:600;font-size:13.5px;cursor:pointer;}
+details.precos .calc-grid{margin-top:10px;}
 ::-webkit-scrollbar{width:0;height:0;}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
 </style>
@@ -580,7 +619,10 @@ main.view.active{display:block;}
       <div class="brand-mark"><span></span></div>
       <h1>Estúdio VBO<small>Financeiro &amp; agenda</small></h1>
     </div>
-    <button class="icon-btn" id="btn-theme" title="Alternar tema" aria-label="Alternar tema">🌙</button>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="btn-ajustes" data-tab-open="ajustes" title="Ajustes" aria-label="Ajustes">⚙️</button>
+      <button class="icon-btn" id="btn-theme" title="Alternar tema" aria-label="Alternar tema">🌙</button>
+    </div>
   </header>
 
   <!-- ===================== DASHBOARD ===================== -->
@@ -677,6 +719,7 @@ main.view.active{display:block;}
   <!-- ===================== QUADRO ===================== -->
   <main class="view" id="view-quadro">
     <div class="pad">
+      <button class="btn" id="btn-calc-quadro" style="margin-bottom:10px;">🧮 Calculadora de orçamento</button>
       <div class="chips" id="quadro-person-chips" style="margin-top:0;"></div>
       <div class="board-sum">
         <div class="card"><span class="label">Em orçamento</span><div class="v" id="quadro-sum-orc">R$ 0</div></div>
@@ -740,6 +783,29 @@ main.view.active{display:block;}
   </main>
 
   <!-- ===================== AJUSTES ===================== -->
+  <!-- ===================== RELATÓRIOS ===================== -->
+  <main class="view" id="view-relatorios">
+    <div class="chips" id="rel-periodo-chips" style="margin-top:0;"></div>
+    <div class="chips" id="rel-pessoa-chips"></div>
+    <div class="month-hero">
+      <div class="eyebrow" id="rel-eyebrow">Faturado</div>
+      <div class="big" id="rel-faturado">R$ 0,00</div>
+      <div class="sub" id="rel-faturado-sub"></div>
+    </div>
+    <div class="rel-kpis" id="rel-kpis"></div>
+    <div id="rel-note-slot"></div>
+    <div class="card" style="margin-top:10px;" id="rel-servicos"></div>
+    <div class="card" style="margin-top:10px;" id="rel-escopo"></div>
+    <div class="card chart-card" style="margin-top:10px;" id="rel-meses"></div>
+    <div class="card" style="margin-top:10px;" id="rel-clientes"></div>
+    <div class="card" style="margin-top:10px;" id="rel-quadro"></div>
+    <div class="card" style="margin-top:10px;" id="rel-resultado"></div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn" id="btn-rel-copiar">📋 Copiar resumo</button>
+      <button class="btn" id="btn-rel-csv">⬇ Planilha (CSV)</button>
+    </div>
+  </main>
+
   <main class="view" id="view-ajustes">
     <div class="section-head" style="margin-top:2px;"><h2>Conta</h2></div>
     <div class="settings-row">
@@ -782,7 +848,7 @@ main.view.active{display:block;}
       <button data-tab="agenda"><span class="icon">📅</span><span class="txt">Agenda</span></button>
       <button data-tab="quadro"><span class="icon">🗂️</span><span class="txt">Quadro</span></button>
       <button data-tab="financeiro"><span class="icon">💰</span><span class="txt">Financeiro</span></button>
-      <button data-tab="ajustes"><span class="icon">⚙️</span><span class="txt">Ajustes</span></button>
+      <button data-tab="relatorios"><span class="icon">📈</span><span class="txt">Relatórios</span></button>
     </div>
   </nav>
 </div>
@@ -810,6 +876,26 @@ main.view.active{display:block;}
         <label for="evento-cliente">Cliente</label>
         <input type="text" id="evento-cliente" placeholder="Ex: Ana Ribeiro">
       </div>
+      <div id="evento-servico-block">
+        <div class="field">
+          <label for="evento-servico">Tipo de trabalho</label>
+          <input type="text" id="evento-servico" list="lista-servicos" placeholder="Ex: Aftermovie, Clipe, Ensaio…">
+        </div>
+        <div class="field">
+          <label>O que a gente faz</label>
+          <div class="status-picker small">
+            <label class="opt-esc"><input type="radio" name="evento-escopo" value="completo">Captação + edição</label>
+            <label class="opt-esc"><input type="radio" name="evento-escopo" value="edicao">Só edição</label>
+            <label class="opt-esc"><input type="radio" name="evento-escopo" value="captacao">Só captação</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="evento-entregas">Quantas entregas</label>
+          <input type="number" min="0" step="1" id="evento-entregas" placeholder="Ex: 1 vídeo + 3 reels = 4">
+          <div class="hint">Vídeos, reels, pacotes de fotos… o que vocês entregam pro cliente.</div>
+        </div>
+      </div>
+      <datalist id="lista-servicos"></datalist>
       <div class="field" id="field-evento-data">
         <label for="evento-data">Data</label>
         <div style="display:flex;gap:8px;">
@@ -1111,13 +1197,20 @@ main.view.active{display:block;}
           <select id="card-coluna"></select>
         </div>
         <div class="field" style="flex:1;">
-          <label for="card-tipo">Tipo</label>
-          <select id="card-tipo">
-            <option value="orcamento">Orçamento</option>
-            <option value="captacao">Captação</option>
-            <option value="edicao">Edição</option>
-            <option value="outro">Outro</option>
-          </select>
+          <label for="card-entregas">Entregas</label>
+          <input type="number" min="0" step="1" id="card-entregas" placeholder="Qtd.">
+        </div>
+      </div>
+      <div class="field">
+        <label for="card-servico">Tipo de trabalho</label>
+        <input type="text" id="card-servico" list="lista-servicos" placeholder="Ex: Aftermovie, Clipe, Edição de reels…">
+      </div>
+      <div class="field">
+        <label>O que a gente faz</label>
+        <div class="status-picker small">
+          <label class="opt-esc"><input type="radio" name="card-escopo" value="completo">Captação + edição</label>
+          <label class="opt-esc"><input type="radio" name="card-escopo" value="edicao">Só edição</label>
+          <label class="opt-esc"><input type="radio" name="card-escopo" value="captacao">Só captação</label>
         </div>
       </div>
       <div class="hint-accent" id="card-fechado-hint" style="display:none;">📅 Em "Fechado", o cartão vira evento confirmado na agenda na data do trabalho.</div>
@@ -1134,7 +1227,10 @@ main.view.active{display:block;}
       </div>
       <div class="field">
         <label for="card-valor">Valor (R$)</label>
-        <input type="number" step="0.01" min="0" id="card-valor" placeholder="0,00">
+        <div style="display:flex;gap:8px;">
+          <input type="number" step="0.01" min="0" id="card-valor" placeholder="0,00" style="flex:1;">
+          <button type="button" class="btn btn-sm" id="btn-card-calc" style="min-height:48px;">🧮 Calcular</button>
+        </div>
       </div>
       <div class="field">
         <label>Responsável</label>
@@ -1155,6 +1251,75 @@ main.view.active{display:block;}
         <button type="submit" class="btn btn-primary">Salvar</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ===================== MODAL: CALCULADORA ===================== -->
+<div class="modal-overlay" id="modal-calc">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <h3>Calculadora de orçamento</h3>
+    <div class="field">
+      <label for="calc-servico">Tipo de trabalho</label>
+      <input type="text" id="calc-servico" list="lista-servicos" placeholder="Ex: Aftermovie">
+    </div>
+    <div class="field">
+      <label>O que a gente faz</label>
+      <div class="status-picker small">
+        <label class="opt-esc"><input type="radio" name="calc-escopo" value="completo">Captação + edição</label>
+        <label class="opt-esc"><input type="radio" name="calc-escopo" value="edicao">Só edição</label>
+        <label class="opt-esc"><input type="radio" name="calc-escopo" value="captacao">Só captação</label>
+      </div>
+    </div>
+    <div id="calc-hist"></div>
+    <div class="calc-sec" id="calc-sec-captacao">
+      <span class="label">Captação</span>
+      <div class="calc-grid">
+        <div class="field"><label for="calc-horas">Horas</label><input type="number" min="0" step="0.5" id="calc-horas" placeholder="0"></div>
+        <div class="field"><label for="calc-pessoas">Quem vai</label>
+          <select id="calc-pessoas"><option value="1">Um de nós</option><option value="2">Nós dois</option></select></div>
+      </div>
+    </div>
+    <div class="calc-sec" id="calc-sec-edicao">
+      <span class="label">Entregas</span>
+      <div class="calc-grid">
+        <div class="field"><label for="calc-videos">Vídeos principais</label><input type="number" min="0" step="1" id="calc-videos" placeholder="0"></div>
+        <div class="field"><label for="calc-curtos">Reels / curtos</label><input type="number" min="0" step="1" id="calc-curtos" placeholder="0"></div>
+        <div class="field"><label for="calc-fotos">Fotos editadas</label><input type="number" min="0" step="1" id="calc-fotos" placeholder="0"></div>
+        <div class="field"><label for="calc-revisoes">Revisões extras</label><input type="number" min="0" step="1" id="calc-revisoes" placeholder="0"></div>
+      </div>
+    </div>
+    <div class="calc-sec">
+      <span class="label">Custos</span>
+      <div class="calc-grid">
+        <div class="field"><label for="calc-km">Deslocamento (km ida+volta)</label><input type="number" min="0" step="1" id="calc-km" placeholder="0"></div>
+        <div class="field"><label for="calc-extras">Outros custos (R$)</label><input type="number" min="0" step="0.01" id="calc-extras" placeholder="ajudante, aluguel…"></div>
+      </div>
+      <label class="check-row" for="calc-urgente" style="min-height:36px;"><input type="checkbox" id="calc-urgente"><span id="calc-urgente-txt">Prazo apertado (urgência)</span></label>
+    </div>
+    <div class="calc-result" id="calc-result"></div>
+    <details class="precos" id="calc-precos">
+      <summary>⚙️ Seus valores (base do cálculo)</summary>
+      <div class="calc-grid">
+        <div class="field"><label for="pr-horaCaptacao">Hora de captação (por pessoa)</label><input type="number" min="0" step="1" data-preco="horaCaptacao" id="pr-horaCaptacao"></div>
+        <div class="field"><label for="pr-edicaoVideo">Edição por vídeo principal</label><input type="number" min="0" step="1" data-preco="edicaoVideo" id="pr-edicaoVideo"></div>
+        <div class="field"><label for="pr-edicaoCurto">Edição por reels/curto</label><input type="number" min="0" step="1" data-preco="edicaoCurto" id="pr-edicaoCurto"></div>
+        <div class="field"><label for="pr-foto">Por foto editada</label><input type="number" min="0" step="0.5" data-preco="foto" id="pr-foto"></div>
+        <div class="field"><label for="pr-revisao">Por revisão extra</label><input type="number" min="0" step="1" data-preco="revisao" id="pr-revisao"></div>
+        <div class="field"><label for="pr-km">Por km rodado</label><input type="number" min="0" step="0.1" data-preco="km" id="pr-km"></div>
+        <div class="field"><label for="pr-margem">Margem / lucro (%)</label><input type="number" min="0" step="1" data-preco="margem" id="pr-margem"></div>
+        <div class="field"><label for="pr-urgencia">Taxa de urgência (%)</label><input type="number" min="0" step="1" data-preco="urgencia" id="pr-urgencia"></div>
+        <div class="field"><label for="pr-imposto">Imposto (%)</label><input type="number" min="0" step="0.5" data-preco="imposto" id="pr-imposto"></div>
+        <div class="field"><label for="pr-minimo">Valor mínimo por trabalho</label><input type="number" min="0" step="10" data-preco="minimo" id="pr-minimo"></div>
+      </div>
+      <div class="hint">Esses valores ficam salvos e valem pros dois. Ajuste até a calculadora bater com o que vocês costumam cobrar.</div>
+    </details>
+    <button class="btn btn-primary" id="btn-calc-usar">Usar esse valor</button>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn" id="btn-calc-copiar">📋 Texto pro cliente</button>
+      <button class="btn btn-ghost" id="btn-calc-fechar">Fechar</button>
+    </div>
+    <div class="calc-sticky"><span class="t">Valor sugerido</span><span class="v" id="calc-sticky-v">R$ 0,00</span></div>
   </div>
 </div>
 
@@ -2148,7 +2313,8 @@ function renderQuadro(){
         '<div class="k-title">'+escapeHtml(c.titulo||'Sem título')+'</div>'+
         (c.cliente?'<div class="k-sub">'+escapeHtml(c.cliente)+'</div>':'')+
         '<div class="k-meta"><span class="k-who p-'+respKey(c)+'" title="'+PESSOA_NOME[respKey(c)]+'"></span>'+
-          '<span class="k-tag">'+(TIPO_NOME[c.tipo]||'Outro')+'</span>'+
+          '<span class="k-tag">'+escapeHtml(c.servico || (escopoDe(c)==='edicao'?'Só edição':(TIPO_NOME[c.tipo]||'Outro')))+'</span>'+
+          (c.entregas?'<span class="k-tag">'+c.entregas+' entrega'+(c.entregas>1?'s':'')+'</span>':'')+
           (c.dataEvento?'<span class="k-date" title="Data do trabalho">'+(c.eventoId?'📅 ':'🗓 ')+fmtDateShort(c.dataEvento)+'</span>':'')+
           (st.txt?'<span class="k-date '+st.cls+'" title="Entrega">📦 '+st.txt+'</span>':'')+
           (Number(c.valor)?'<span class="k-val">'+fmtCompact(c.valor)+'</span>':'')+
@@ -2189,6 +2355,9 @@ function syncEventoFromCard(c){
     e.responsavel = c.responsavel || e.responsavel;
     if(Number(c.valor)) e.valor = Number(c.valor);
     if(c.dataEvento) e.data = c.dataEvento;
+    if(c.servico) e.servico = c.servico;
+    if(c.escopo) e.escopo = c.escopo;
+    if(c.entregas) e.entregas = c.entregas;
     if(c.coluna==='orcando'){ if(e.status==='confirmado') e.status = 'pendente'; }
     else if(e.status==='pendente') e.status = 'confirmado';
     return 'atualizado';
@@ -2196,7 +2365,8 @@ function syncEventoFromCard(c){
   if(c.coluna==='fechado' && c.dataEvento && !c.semEvento){
     var ne = { id: uid(), tipo:'trabalho', titulo: c.titulo, cliente: c.cliente||'', data: c.dataEvento,
       periodo:'dia-inteiro', hora:'', valor: Number(c.valor)||0, status:'confirmado',
-      responsavel: c.responsavel||'ambos', local:'', notas: c.notas||'' };
+      responsavel: c.responsavel||'ambos', local:'', notas: c.notas||'',
+      servico: c.servico||'', escopo: escopoDe(c), entregas: c.entregas||0 };
     state.eventos.push(ne);
     c.eventoId = ne.id;
     return 'criado';
@@ -2210,6 +2380,9 @@ function syncCardFromEvento(e){
   c.responsavel = e.responsavel || c.responsavel;
   if(Number(e.valor)) c.valor = Number(e.valor);
   c.dataEvento = e.data;
+  if(e.servico) c.servico = e.servico;
+  if(e.escopo) c.escopo = e.escopo;
+  if(e.entregas) c.entregas = e.entregas;
   if(c.coluna==='orcando' && e.status!=='pendente') c.coluna = 'fechado';
   else if(c.coluna==='fechado' && e.status==='pendente') c.coluna = 'orcando';
 }
@@ -2258,7 +2431,9 @@ function openCardModal(id, coluna, opts){
   document.getElementById('card-titulo').value = c ? (c.titulo||'') : '';
   document.getElementById('card-cliente').value = c ? (c.cliente||'') : '';
   document.getElementById('card-coluna').value = col;
-  document.getElementById('card-tipo').value = c ? (c.tipo||'outro') : ((col==='edicao')?'edicao':(col==='orcando'?'orcamento':'captacao'));
+  document.getElementById('card-servico').value = c ? (c.servico||'') : '';
+  document.getElementById('card-entregas').value = c && c.entregas ? c.entregas : '';
+  setRadio('card-escopo', c ? escopoDe(c) : (col==='edicao'?'edicao':'completo'));
   document.getElementById('card-valor').value = c && c.valor ? c.valor : '';
   document.getElementById('card-data-evento').value = c ? (c.dataEvento||'') : '';
   document.getElementById('card-entrega').value = c ? (c.dataEntrega||'') : '';
@@ -2283,6 +2458,15 @@ function openCardModal(id, coluna, opts){
     document.getElementById('card-puxar-label').textContent = col==='edicao' ? 'Qual trampo vai pra edição?' : 'Puxar um trampo da agenda';
     wrap.style.display = '';
   } else wrap.style.display = 'none';
+  if(opts.prefill){
+    var pf = opts.prefill;
+    if(pf.valor) document.getElementById('card-valor').value = pf.valor;
+    if(pf.servico) document.getElementById('card-servico').value = pf.servico;
+    if(pf.entregas) document.getElementById('card-entregas').value = pf.entregas;
+    if(pf.escopo) setRadio('card-escopo', pf.escopo);
+    if(pf.notas) document.getElementById('card-notas').value = pf.notas;
+    if(pf.titulo) document.getElementById('card-titulo').value = pf.titulo;
+  }
   if(opts.fromEvento){
     sel.innerHTML = '<option value="'+opts.fromEvento.id+'">'+fmtDateShort(opts.fromEvento.data)+' · '+escapeHtml(opts.fromEvento.titulo||'')+'</option>';
     sel.value = opts.fromEvento.id; wrap.style.display = '';
@@ -2310,7 +2494,9 @@ function aplicarPuxar(eid){
   document.getElementById('card-data-evento').value = e.data || '';
   var r = document.querySelector('input[name="card-responsavel"][value="'+respKey(e)+'"]'); if(r) r.checked = true;
   var col = document.getElementById('card-coluna').value;
-  if(col==='edicao') document.getElementById('card-tipo').value = 'edicao';
+  if(e.servico) document.getElementById('card-servico').value = e.servico;
+  if(e.entregas) document.getElementById('card-entregas').value = e.entregas;
+  setRadio('card-escopo', col==='edicao' ? 'edicao' : escopoDe(e));
   clearFieldError('field-card-titulo');
   updateStatusPickerClasses();
 }
@@ -2333,7 +2519,9 @@ function lerCardForm(){
     titulo: titulo,
     cliente: document.getElementById('card-cliente').value.trim(),
     coluna: document.getElementById('card-coluna').value,
-    tipo: document.getElementById('card-tipo').value,
+    servico: document.getElementById('card-servico').value.trim(),
+    escopo: getRadio('card-escopo') || 'completo',
+    entregas: parseInt(document.getElementById('card-entregas').value,10) || 0,
     valor: isNaN(v) ? 0 : v,
     dataEvento: document.getElementById('card-data-evento').value,
     dataEntrega: document.getElementById('card-entrega').value,
@@ -2386,7 +2574,8 @@ document.getElementById('btn-card-evento').addEventListener('click', function(){
   pendingCardLink = c.id;
   openEventoModal(null, c.dataEvento || c.dataEntrega || '', {
     titulo: c.titulo, cliente: c.cliente, valor: c.valor || '', responsavel: respKey(c),
-    status: c.coluna==='orcando' ? 'pendente' : 'confirmado', notas: c.notas
+    status: c.coluna==='orcando' ? 'pendente' : 'confirmado', notas: c.notas,
+    servico: c.servico, escopo: escopoDe(c), entregas: c.entregas
   });
 });
 var pendingCardLink = null;
@@ -2525,10 +2714,12 @@ function renderCompras(){
 function renderAll(){
   ensureUpcomingFixedExpenses();
   ensureDespesasFixasGeradas(viewYear, viewMonth);
+  atualizarListaServicos();
   renderDashboard();
   renderAgenda();
   renderQuadro();
   renderFinanceiro();
+  renderRelatorios();
 }
 
 function switchTab(tab){
@@ -2608,6 +2799,9 @@ function openEventoModal(id, prefillDate, prefill){
     document.getElementById('evento-valor').value = e.valor||'';
     document.getElementById('evento-local').value = e.local||'';
     document.getElementById('evento-notas').value = e.notas||'';
+    document.getElementById('evento-servico').value = e.servico||'';
+    document.getElementById('evento-entregas').value = e.entregas||'';
+    setRadio('evento-escopo', escopoDe(e));
     var radioTipo = document.querySelector('input[name="evento-tipo"][value="'+(e.tipo||'trabalho')+'"]');
     if(radioTipo) radioTipo.checked = true;
     var radioPeriodo = document.querySelector('input[name="evento-periodo"][value="'+(e.periodo||'dia-inteiro')+'"]');
@@ -2628,6 +2822,9 @@ function openEventoModal(id, prefillDate, prefill){
     document.getElementById('evento-cliente').value = pf.cliente || '';
     document.getElementById('evento-valor').value = pf.valor || '';
     document.getElementById('evento-notas').value = pf.notas || '';
+    document.getElementById('evento-servico').value = pf.servico || '';
+    document.getElementById('evento-entregas').value = pf.entregas || '';
+    setRadio('evento-escopo', pf.escopo || 'completo');
     var rTipo = document.querySelector('input[name="evento-tipo"][value="trabalho"]');
     if(rTipo) rTipo.checked = true;
     var rPeriodo = document.querySelector('input[name="evento-periodo"][value="dia-inteiro"]');
@@ -2644,6 +2841,34 @@ function openEventoModal(id, prefillDate, prefill){
   updateEventoTipoUI();
   openModal('modal-evento');
 }
+/* ---- tipo de trabalho / escopo / entregas (v4) ---- */
+var SERVICOS_PADRAO = ['Aftermovie','Clipe musical','Cobertura de evento','Vídeo institucional','Publicidade / marca','Stories / social media','Ensaio fotográfico','Casamento','Edição de episódio','Edição de reels','Imobiliário','Outro'];
+var ESCOPO_NOME = {completo:'Captação + edição', edicao:'Só edição', captacao:'Só captação'};
+function escopoDe(x){
+  if(!x) return 'completo';
+  if(x.escopo==='completo'||x.escopo==='edicao'||x.escopo==='captacao') return x.escopo;
+  if(x.tipo==='edicao') return 'edicao';
+  if(x.tipo==='captacao') return 'captacao';
+  return 'completo';
+}
+function setRadio(name, val){
+  document.querySelectorAll('input[name="'+name+'"]').forEach(function(r){ r.checked = (r.value===val); });
+  updateStatusPickerClasses();
+}
+function getRadio(name){ var el = document.querySelector('input[name="'+name+'"]:checked'); return el ? el.value : ''; }
+function servicoNome(x){ return (x && x.servico && x.servico.trim()) ? x.servico.trim() : 'Sem tipo definido'; }
+function atualizarListaServicos(){
+  var vistos = {}, lista = [];
+  function add(n){ n = (n||'').trim(); if(!n) return; var k = n.toLowerCase(); if(vistos[k]) return; vistos[k] = true; lista.push(n); }
+  state.eventos.forEach(function(e){ add(e.servico); });
+  state.cards.forEach(function(c){ add(c.servico); });
+  SERVICOS_PADRAO.forEach(add);
+  document.getElementById('lista-servicos').innerHTML = lista.map(function(n){ return '<option value="'+escapeHtml(n)+'">'; }).join('');
+}
+['evento-escopo','card-escopo','calc-escopo'].forEach(function(n){
+  document.querySelectorAll('input[name="'+n+'"]').forEach(function(r){ r.addEventListener('change', updateStatusPickerClasses); });
+});
+
 function renderEventoQuadroBox(e){
   var box = document.getElementById('evento-quadro-box');
   if(!e || !isTrabalho(e)){ box.innerHTML = ''; return; }
@@ -2656,6 +2881,7 @@ function updateEventoTipoUI(){
   var tipoEl = document.querySelector('input[name="evento-tipo"]:checked');
   var isPessoal = tipoEl ? tipoEl.value==='pessoal' : false;
   document.getElementById('field-evento-valor').style.display = isPessoal ? 'none' : '';
+  document.getElementById('evento-servico-block').style.display = isPessoal ? 'none' : '';
   document.getElementById('label-evento-titulo').textContent = isPessoal ? 'Nome do evento' : 'Nome do trabalho';
   document.getElementById('evento-titulo').placeholder = isPessoal ? 'Ex: Chá de casa nova, Aniversário…' : 'Ex: Casamento Ana & Rafa, Ensaio corporativo…';
   if(isPessoal) clearFieldError('field-evento-valor');
@@ -2720,7 +2946,10 @@ document.getElementById('form-evento').addEventListener('submit', function(ev){
     status: statusEl ? statusEl.value : 'confirmado',
     responsavel: responsavelEl ? responsavelEl.value : 'ambos',
     local: document.getElementById('evento-local').value.trim(),
-    notas: document.getElementById('evento-notas').value.trim()
+    notas: document.getElementById('evento-notas').value.trim(),
+    servico: isPessoal ? '' : document.getElementById('evento-servico').value.trim(),
+    escopo: isPessoal ? '' : (getRadio('evento-escopo') || 'completo'),
+    entregas: isPessoal ? 0 : (parseInt(document.getElementById('evento-entregas').value,10) || 0)
   };
 
   if(editingEventoId){
@@ -3119,6 +3348,21 @@ document.addEventListener('click', function(e){
     return;
   }
 
+  var tabOpen = t.closest('[data-tab-open]');
+  if(tabOpen){ switchTab(tabOpen.dataset.tabOpen); return; }
+  var rp = t.closest('[data-rel-periodo]');
+  if(rp){ relPeriodo = rp.dataset.relPeriodo; prefSet('rel_periodo', relPeriodo); renderRelatorios(); return; }
+  var rpe = t.closest('[data-rel-pessoa]');
+  if(rpe){ relPessoa = rpe.dataset.relPessoa; prefSet('rel_pessoa', relPessoa); renderRelatorios(); return; }
+  var rm = t.closest('[data-rel-mes]');
+  if(rm){
+    var mx = relMeses[parseInt(rm.dataset.relMes,10)];
+    if(mx){
+      document.querySelectorAll('#rel-meses .hit').forEach(function(h){ h.classList.toggle('on', h===rm); });
+      document.getElementById('rel-mes-caption').innerHTML = MESES[mx.m]+' '+mx.y+': <b>'+fmtBRL(mx.v)+'</b> · '+mx.n+' trabalho'+(mx.n===1?'':'s');
+    }
+    return;
+  }
   var c2e = t.closest('[data-card-to-evento]');
   if(c2e){ closeModal('modal-card'); openEventoModal(c2e.dataset.cardToEvento); return; }
   var e2c = t.closest('[data-evento-to-card]');
@@ -3285,6 +3529,377 @@ if(btnLogout){
 /* ============================================================
    INICIALIZAÇÃO
 ============================================================ */
+/* ============================================================
+   RELATÓRIOS (v4)
+   Conta só trabalhos (eventos tipo trabalho). "Faturado" = recebido +
+   confirmado, igual ao Painel; pendente aparece à parte.
+============================================================ */
+var REL_PERIODOS = [
+  {k:'mes', t:'Este mês'}, {k:'mes-ant', t:'Mês passado'}, {k:'3m', t:'3 meses'},
+  {k:'ano', t:'Este ano'}, {k:'ano-ant', t:'Ano passado'}, {k:'tudo', t:'Tudo'}
+];
+var relPeriodo = prefGet('rel_periodo','ano');
+var relPessoa = prefGet('rel_pessoa','todos');
+var relMeses = [];
+function relRange(k){
+  var d = new Date(), y = d.getFullYear(), m = d.getMonth();
+  function ini(yy,mm){ return isoFromParts(yy,mm,1); }
+  function fim(yy,mm){ return isoFromParts(yy,mm,new Date(yy,mm+1,0).getDate()); }
+  if(k==='mes') return {a:ini(y,m), b:fim(y,m), t:MESES[m]+' '+y};
+  if(k==='mes-ant'){ var pm=m-1, py=y; if(pm<0){pm=11;py--;} return {a:ini(py,pm), b:fim(py,pm), t:MESES[pm]+' '+py}; }
+  if(k==='3m'){ var sm=m-2, sy=y; while(sm<0){sm+=12;sy--;} return {a:ini(sy,sm), b:fim(y,m), t:MESES_ABR[sm]+'–'+MESES_ABR[m]+' '+y}; }
+  if(k==='ano') return {a:ini(y,0), b:fim(y,11), t:String(y)};
+  if(k==='ano-ant') return {a:ini(y-1,0), b:fim(y-1,11), t:String(y-1)};
+  var datas = state.eventos.filter(isTrabalho).map(function(e){return e.data;}).filter(Boolean).sort();
+  var a = datas.length ? datas[0].slice(0,8)+'01' : ini(y,m);
+  return {a:a, b:'9999-12-31', t:'Todo o histórico'};
+}
+function trabalhosNoPeriodo(r, pessoa){
+  return state.eventos.filter(function(e){
+    return isTrabalho(e) && e.data && e.data>=r.a && e.data<=r.b && passaFiltro(e, pessoa);
+  });
+}
+function agrupar(lista, chaveFn){
+  var g = {};
+  lista.forEach(function(e){
+    var k = chaveFn(e);
+    var o = g[k] || (g[k] = {k:k, n:0, valor:0, entregas:0, semEntregas:0});
+    o.n++; o.valor += Number(e.valor)||0;
+    if(Number(e.entregas)) o.entregas += Number(e.entregas); else o.semEntregas++;
+  });
+  return Object.keys(g).map(function(k){ return g[k]; }).sort(function(a,b){ return b.valor-a.valor || b.n-a.n; });
+}
+function relRows(grupos, max){
+  if(!grupos.length) return '<div style="font-size:13px;color:var(--text-faint);padding:6px 0;">Nada no período.</div>';
+  var top = grupos[0].valor || 1;
+  return grupos.slice(0, max||50).map(function(g){
+    var meta = g.n+' trabalho'+(g.n>1?'s':'')+' · ticket médio '+fmtBRL(g.n?g.valor/g.n:0);
+    if(g.entregas) meta += ' · '+g.entregas+' entrega'+(g.entregas>1?'s':'')+' ('+fmtBRL(g.valor/g.entregas)+' cada)';
+    return '<div class="rel-row"><div class="top"><b>'+escapeHtml(g.k)+'</b><span>'+fmtBRL(g.valor)+'</span></div>'+
+      '<div class="bar"><i style="width:'+Math.max(2, g.valor/top*100).toFixed(1)+'%"></i></div>'+
+      '<div class="meta">'+meta+'</div></div>';
+  }).join('');
+}
+function renderRelatorios(){
+  document.getElementById('rel-periodo-chips').innerHTML = REL_PERIODOS.map(function(p){
+    return '<button data-rel-periodo="'+p.k+'" class="'+(p.k===relPeriodo?'active':'')+'">'+p.t+'</button>';
+  }).join('');
+  renderChips('rel-pessoa-chips', relPessoa, 'data-rel-pessoa');
+  var r = relRange(relPeriodo);
+  var todos = trabalhosNoPeriodo(r, relPessoa);
+  var fat = todos.filter(function(e){ return e.status!=='pendente'; });
+  var pend = todos.filter(function(e){ return e.status==='pendente'; });
+  var total = sum(fat.map(function(e){return e.valor;}));
+  var recebido = sum(fat.filter(function(e){return e.status==='recebido';}).map(function(e){return e.valor;}));
+  var comEnt = fat.filter(function(e){ return Number(e.entregas)>0; });
+  var entregas = sum(comEnt.map(function(e){return e.entregas;}));
+  var quem = relPessoa==='todos' ? '' : ' · '+PESSOA_NOME[relPessoa];
+
+  document.getElementById('rel-eyebrow').textContent = 'Faturado · '+r.t+quem;
+  document.getElementById('rel-faturado').textContent = fmtBRL(total);
+  document.getElementById('rel-faturado-sub').textContent = fmtBRL(recebido)+' já recebido · '+fmtBRL(total-recebido)+' a receber';
+  document.getElementById('rel-kpis').innerHTML =
+    '<div class="card"><span class="label">Trabalhos</span><div class="v">'+fat.length+'</div><div class="s">fechados</div></div>'+
+    '<div class="card"><span class="label">Ticket médio</span><div class="v">'+fmtCompact(fat.length?total/fat.length:0)+'</div><div class="s">por trabalho</div></div>'+
+    '<div class="card"><span class="label">Entregas</span><div class="v">'+entregas+'</div><div class="s">'+(entregas?fmtCompact(sum(comEnt.map(function(e){return e.valor;}))/entregas)+' cada':'—')+'</div></div>'+
+    '<div class="card"><span class="label">Pendente</span><div class="v" style="color:var(--warning)">'+fmtCompact(sum(pend.map(function(e){return e.valor;})))+'</div><div class="s">'+pend.length+' orçamento(s)</div></div>'+
+    '<div class="card"><span class="label">Só edição</span><div class="v">'+fat.filter(function(e){return escopoDe(e)==='edicao';}).length+'</div><div class="s">trabalhos</div></div>'+
+    '<div class="card"><span class="label">Clientes</span><div class="v">'+agrupar(fat, function(e){ return (e.cliente||'').trim().toLowerCase() || '—'; }).length+'</div><div class="s">diferentes</div></div>';
+
+  var semTipo = fat.filter(function(e){ return !e.servico; }).length;
+  var semEnt = fat.length - comEnt.length;
+  var notas = [];
+  if(semTipo) notas.push(semTipo+' trabalho(s) sem tipo definido');
+  if(semEnt) notas.push(semEnt+' sem nº de entregas');
+  document.getElementById('rel-note-slot').innerHTML = notas.length ?
+    '<div class="rel-note">ℹ️ '+notas.join(' e ')+'. Abra o evento na Agenda (ou o cartão no Quadro) e preencha "Tipo de trabalho" e "Quantas entregas" pra deixar o relatório completo.</div>' : '';
+
+  document.getElementById('rel-servicos').innerHTML = '<span class="label" style="display:block;margin-bottom:4px;">Por tipo de trabalho</span>'+relRows(agrupar(fat, servicoNome));
+  document.getElementById('rel-escopo').innerHTML = '<span class="label" style="display:block;margin-bottom:4px;">Captação × edição</span>'+relRows(agrupar(fat, function(e){ return ESCOPO_NOME[escopoDe(e)]; }));
+  document.getElementById('rel-clientes').innerHTML = '<span class="label" style="display:block;margin-bottom:4px;">Principais clientes</span>'+
+    relRows(agrupar(fat, function(e){ return (e.cliente||'').trim() || 'Sem cliente informado'; }), 8);
+
+  renderRelMeses(r, fat);
+
+  // quadro: entregas no período
+  var ent = state.cards.filter(function(c){ return c.coluna==='entregue' && c.entregueEm && c.entregueEm>=r.a && c.entregueEm<=r.b && passaFiltro(c, relPessoa); });
+  var comPrazo = ent.filter(function(c){ return c.dataEntrega; });
+  var noPrazo = comPrazo.filter(function(c){ return c.entregueEm <= c.dataEntrega; }).length;
+  var dias = ent.filter(function(c){ return c.dataEvento; }).map(function(c){ return Math.max(0, Math.round((dateFromISO(c.entregueEm)-dateFromISO(c.dataEvento))/86400000)); });
+  document.getElementById('rel-quadro').innerHTML = '<span class="label" style="display:block;margin-bottom:8px;">Entregas do Quadro</span>'+
+    (ent.length ? '<div class="split-legend">'+
+      '<div class="sl" style="--p:var(--accent)"><i></i><span class="n">Cartões entregues</span><span class="v">'+ent.length+'</span></div>'+
+      (comPrazo.length?'<div class="sl" style="--p:var(--success)"><i></i><span class="n">Entregues no prazo</span><span class="v">'+noPrazo+' de '+comPrazo.length+'</span><span class="pc">'+Math.round(noPrazo/comPrazo.length*100)+'%</span></div>':'')+
+      (dias.length?'<div class="sl" style="--p:var(--info)"><i></i><span class="n">Do trabalho até a entrega</span><span class="v">'+Math.round(sum(dias)/dias.length)+' dias</span><span class="pc">média</span></div>':'')+
+      '</div>' : '<div style="font-size:13px;color:var(--text-faint);">Nenhum cartão entregue no período.</div>');
+
+  // resultado
+  var despesas = despesasLista().filter(function(d){ return d.vencimento && d.vencimento>=r.a && d.vencimento<=r.b; });
+  var totDesp = sum(despesas.map(function(d){return d.valor;}));
+  document.getElementById('rel-resultado').innerHTML = relPessoa!=='todos'
+    ? '<span class="label" style="display:block;margin-bottom:6px;">Resultado</span><div style="font-size:13px;color:var(--text-muted);">As despesas são da casa/estúdio — o resultado aparece em "Todos".</div>'
+    : '<span class="label" style="display:block;margin-bottom:8px;">Resultado do período</span>'+
+      '<div class="calc-line"><span>Faturado</span><span>'+fmtBRL(total)+'</span></div>'+
+      '<div class="calc-line"><span>Despesas ('+despesas.length+')</span><span>− '+fmtBRL(totDesp)+'</span></div>'+
+      '<div class="calc-line tot"><span>Resultado</span><span style="color:'+(total-totDesp>=0?'var(--success)':'var(--danger)')+'">'+fmtBRL(total-totDesp)+'</span></div>';
+}
+function renderRelMeses(r, fat){
+  var hoje = new Date();
+  var a = dateFromISO(r.a);
+  var b = r.b==='9999-12-31' ? new Date(hoje.getFullYear(), hoje.getMonth(), 1) : dateFromISO(r.b);
+  var meses = [];
+  var y = a.getFullYear(), m = a.getMonth();
+  while(y<b.getFullYear() || (y===b.getFullYear() && m<=b.getMonth())){
+    meses.push({y:y, m:m, v:0, n:0});
+    m++; if(m>11){ m=0; y++; }
+  }
+  if(meses.length>24) meses = meses.slice(-24);
+  var idx = {}; meses.forEach(function(x,i){ idx[x.y+'-'+x.m] = i; });
+  fat.forEach(function(e){ var d = dateFromISO(e.data); var i = idx[d.getFullYear()+'-'+d.getMonth()]; if(i!=null){ meses[i].v += Number(e.valor)||0; meses[i].n++; } });
+  relMeses = meses;
+  var el = document.getElementById('rel-meses');
+  var head = '<span class="label" style="display:block;margin-bottom:8px;">Mês a mês</span>';
+  if(meses.length<2){ el.innerHTML = head+'<div style="font-size:13px;color:var(--text-muted);">Escolha um período maior (3 meses, ano…) pra ver a evolução.</div>'; return; }
+  var max = Math.max.apply(null, meses.map(function(x){return x.v;}));
+  if(max<=0){ el.innerHTML = head+'<div style="font-size:13px;color:var(--text-faint);">Sem faturamento no período.</div>'; return; }
+  var W=320, H=150, L=6, B=16, T=14, ph=H-B-T, gw=(W-L)/meses.length, bw=Math.max(4, Math.min(18, gw*0.6));
+  var svg = '<svg class="chart-svg" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Faturamento mês a mês">';
+  var iMax = 0; meses.forEach(function(x,i){ if(x.v>meses[iMax].v) iMax = i; });
+  meses.forEach(function(x,i){
+    var cx = L + i*gw + gw/2;
+    var h = x.v>0 ? Math.max(2, x.v/max*ph) : 0;
+    var y0 = T+ph-h;
+    svg += '<rect class="hit" data-rel-mes="'+i+'" x="'+(L+i*gw+1)+'" y="'+T+'" width="'+(gw-2)+'" height="'+ph+'" rx="5"></rect>';
+    if(h>0){
+      var rr = Math.min(4, h, bw/2), x0 = cx-bw/2;
+      svg += '<path style="fill:var(--accent);pointer-events:none" d="M'+x0+','+(T+ph)+'V'+(y0+rr)+'Q'+x0+','+y0+' '+(x0+rr)+','+y0+'H'+(x0+bw-rr)+'Q'+(x0+bw)+','+y0+' '+(x0+bw)+','+(y0+rr)+'V'+(T+ph)+'Z"></path>';
+    }
+    if(i===iMax) svg += '<text x="'+cx+'" y="'+(y0-4)+'" text-anchor="middle" class="cur">'+fmtCompact(x.v).replace('R$ ','')+'</text>';
+    var showLabel = meses.length<=12 || i%2===0;
+    if(showLabel) svg += '<text x="'+cx+'" y="'+(H-3)+'" text-anchor="middle">'+MESES_ABR[x.m]+(x.m===0&&meses.length>12?'/'+String(x.y).slice(2):'')+'</text>';
+  });
+  svg += '<line x1="'+L+'" x2="'+W+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" style="stroke:var(--text-faint);stroke-width:1"></line></svg>';
+  var tot = sum(meses.map(function(x){return x.v;}));
+  el.innerHTML = head+svg+'<div class="rel-caption" id="rel-mes-caption">Média: <b>'+fmtBRL(tot/meses.length)+'</b> por mês · toque num mês</div>';
+}
+function relResumoTexto(){
+  var r = relRange(relPeriodo);
+  var fat = trabalhosNoPeriodo(r, relPessoa).filter(function(e){ return e.status!=='pendente'; });
+  var total = sum(fat.map(function(e){return e.valor;}));
+  var linhas = ['Estúdio VBO — relatório '+r.t+(relPessoa!=='todos'?' ('+PESSOA_NOME[relPessoa]+')':''),
+    'Faturado: '+fmtBRL(total)+' em '+fat.length+' trabalho(s)', 'Ticket médio: '+fmtBRL(fat.length?total/fat.length:0), '', 'Por tipo de trabalho:'];
+  agrupar(fat, servicoNome).forEach(function(g){ linhas.push('• '+g.k+': '+g.n+'x · '+fmtBRL(g.valor)+(g.entregas?' · '+g.entregas+' entregas':'')); });
+  linhas.push('', 'Captação × edição:');
+  agrupar(fat, function(e){ return ESCOPO_NOME[escopoDe(e)]; }).forEach(function(g){ linhas.push('• '+g.k+': '+g.n+'x · '+fmtBRL(g.valor)); });
+  if(relPessoa==='todos'){
+    var desp = sum(despesasLista().filter(function(d){ return d.vencimento && d.vencimento>=r.a && d.vencimento<=r.b; }).map(function(d){return d.valor;}));
+    linhas.push('', 'Despesas: '+fmtBRL(desp), 'Resultado: '+fmtBRL(total-desp));
+  }
+  return linhas.join('\n');
+}
+function compartilharTexto(txt, okMsg){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ toast(okMsg); }).catch(function(){ fallbackCopy(txt, okMsg); });
+  } else fallbackCopy(txt, okMsg);
+}
+function fallbackCopy(txt, okMsg){
+  var ta = document.createElement('textarea'); ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast(okMsg); }catch(e){ alert(txt); }
+  document.body.removeChild(ta);
+}
+document.getElementById('btn-rel-copiar').addEventListener('click', function(){ compartilharTexto(relResumoTexto(), '📋 Resumo copiado'); });
+document.getElementById('btn-rel-csv').addEventListener('click', function(){
+  var r = relRange(relPeriodo);
+  var lista = trabalhosNoPeriodo(r, relPessoa).sort(cmpEvento);
+  function q(v){ v = String(v==null?'':v); return /[;"\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+  var linhas = [['Data','Trabalho','Cliente','Tipo de trabalho','Escopo','Entregas','Quem','Status','Valor'].join(';')];
+  lista.forEach(function(e){
+    linhas.push([fmtDateBR(e.data), e.titulo, e.cliente, e.servico, ESCOPO_NOME[escopoDe(e)], e.entregas||'', pessoaTexto(e), statusLabel(e.status), (Number(e.valor)||0).toFixed(2).replace('.',',')].map(q).join(';'));
+  });
+  var blob = new Blob(['﻿'+linhas.join('\r\n')], {type:'text/csv;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = 'estudiovbo-trabalhos-'+relPeriodo+'-'+todayISO()+'.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+});
+
+/* ============================================================
+   CALCULADORA DE ORÇAMENTO (v4)
+   Base: horas de captação × pessoas + edição por entrega + fotos
+   + revisões extras + km + custos; depois margem, urgência e imposto
+   (imposto "por dentro": o valor final já cobre o imposto).
+   Valores-base em state.precos — editáveis e compartilhados.
+============================================================ */
+var PRECOS_PADRAO = { horaCaptacao:150, edicaoVideo:350, edicaoCurto:150, foto:15, revisao:80, km:1.5, margem:0, urgencia:30, imposto:0, minimo:300 };
+function precos(){
+  var p = state.precos || {};
+  var out = {};
+  Object.keys(PRECOS_PADRAO).forEach(function(k){ out[k] = (p[k]===undefined || p[k]===null || p[k]==='') ? PRECOS_PADRAO[k] : Number(p[k]); });
+  return out;
+}
+var calcOrigem = null; // 'card' quando aberta de dentro de um cartão
+function numVal(id){ var v = parseFloat(document.getElementById(id).value); return isNaN(v)||v<0 ? 0 : v; }
+function openCalc(origem){
+  calcOrigem = origem || null;
+  ['calc-horas','calc-videos','calc-curtos','calc-fotos','calc-revisoes','calc-km','calc-extras'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('calc-urgente').checked = false;
+  document.getElementById('calc-pessoas').value = '1';
+  var p = precos();
+  document.querySelectorAll('[data-preco]').forEach(function(inp){ inp.value = p[inp.dataset.preco]; });
+  if(origem==='card'){
+    document.getElementById('calc-servico').value = document.getElementById('card-servico').value;
+    setRadio('calc-escopo', getRadio('card-escopo') || 'completo');
+    var resp = getRadio('card-responsavel');
+    document.getElementById('calc-pessoas').value = resp==='ambos' ? '2' : '1';
+    var ent = parseInt(document.getElementById('card-entregas').value,10);
+    if(ent) document.getElementById('calc-videos').value = ent;
+  } else {
+    document.getElementById('calc-servico').value = '';
+    setRadio('calc-escopo', 'completo');
+  }
+  document.getElementById('btn-calc-usar').textContent = origem==='card' ? 'Usar esse valor no cartão' : '🗂️ Criar cartão em "Orçando"';
+  atualizarListaServicos();
+  recalc();
+  openModal('modal-calc');
+}
+var calcUltimo = null;
+function recalc(){
+  var p = precos();
+  var esc = getRadio('calc-escopo') || 'completo';
+  document.getElementById('calc-sec-captacao').style.display = esc==='edicao' ? 'none' : '';
+  document.getElementById('calc-sec-edicao').style.display = esc==='captacao' ? 'none' : '';
+  document.getElementById('calc-urgente-txt').textContent = 'Prazo apertado (+'+p.urgencia+'% de urgência)';
+  var horas = esc==='edicao' ? 0 : numVal('calc-horas');
+  var pessoas = parseInt(document.getElementById('calc-pessoas').value,10) || 1;
+  var videos = esc==='captacao' ? 0 : numVal('calc-videos');
+  var curtos = esc==='captacao' ? 0 : numVal('calc-curtos');
+  var fotos = esc==='captacao' ? 0 : numVal('calc-fotos');
+  var revs = esc==='captacao' ? 0 : numVal('calc-revisoes');
+  var km = numVal('calc-km'), extras = numVal('calc-extras');
+  var linhas = [];
+  function L(txt, v){ if(v>0) linhas.push({t:txt, v:v}); return v; }
+  var sub = 0;
+  sub += L('Captação: '+horas+'h × '+pessoas+(pessoas>1?' pessoas':' pessoa'), horas*pessoas*p.horaCaptacao);
+  sub += L(videos+' vídeo(s) editado(s)', videos*p.edicaoVideo);
+  sub += L(curtos+' reels/curto(s)', curtos*p.edicaoCurto);
+  sub += L(fotos+' foto(s) editada(s)', fotos*p.foto);
+  sub += L(revs+' revisão(ões) extra(s)', revs*p.revisao);
+  sub += L('Deslocamento: '+km+' km', km*p.km);
+  sub += L('Outros custos', extras);
+  var total = sub;
+  var margem = sub*p.margem/100; total += margem;
+  var urg = document.getElementById('calc-urgente').checked ? total*p.urgencia/100 : 0; total += urg;
+  var semImposto = total;
+  if(p.imposto>0 && p.imposto<100) total = total/(1-p.imposto/100);
+  var imposto = total - semImposto;
+  var aplicouMinimo = false;
+  if(sub>0 && total < p.minimo){ total = p.minimo; aplicouMinimo = true; }
+  var sugerido = total>0 ? Math.ceil(total/50)*50 : 0;
+  var entregas = Math.round(videos + curtos + (fotos>0?1:0));
+  calcUltimo = {valor:sugerido, servico:document.getElementById('calc-servico').value.trim(), escopo:esc, entregas:entregas,
+    horas:horas, pessoas:pessoas, videos:videos, curtos:curtos, fotos:fotos, revs:revs, urgente:urg>0};
+
+  var html = '<span class="label" style="display:block;">Valor sugerido</span><div class="big">'+fmtBRL(sugerido)+'</div>';
+  if(sugerido>0){
+    html += '<div style="font-size:12px;color:var(--text-muted);margin:2px 0 8px;">faixa pra negociar: '+fmtBRL(Math.ceil(sugerido*0.9/50)*50)+' a '+fmtBRL(Math.ceil(sugerido*1.15/50)*50)+'</div>';
+    html += linhas.map(function(l){ return '<div class="calc-line"><span>'+escapeHtml(l.t)+'</span><span>'+fmtBRL(l.v)+'</span></div>'; }).join('');
+    if(margem>0) html += '<div class="calc-line"><span>Margem '+p.margem+'%</span><span>'+fmtBRL(margem)+'</span></div>';
+    if(urg>0) html += '<div class="calc-line"><span>Urgência '+p.urgencia+'%</span><span>'+fmtBRL(urg)+'</span></div>';
+    if(imposto>0) html += '<div class="calc-line"><span>Imposto '+p.imposto+'%</span><span>'+fmtBRL(imposto)+'</span></div>';
+    if(aplicouMinimo) html += '<div class="calc-line"><span>Ajustado pro valor mínimo</span><span>'+fmtBRL(p.minimo)+'</span></div>';
+    html += '<div class="calc-line tot"><span>Arredondado</span><span>'+fmtBRL(sugerido)+'</span></div>';
+  } else {
+    html += '<div style="font-size:12.5px;color:var(--text-muted);margin-top:4px;">Preencha horas e entregas pra calcular.</div>';
+  }
+  document.getElementById('calc-result').innerHTML = html;
+  document.getElementById('calc-sticky-v').textContent = fmtBRL(sugerido);
+  renderCalcHist(calcUltimo.servico, esc);
+}
+function renderCalcHist(servico, esc){
+  var box = document.getElementById('calc-hist');
+  var fat = state.eventos.filter(function(e){ return isTrabalho(e) && e.status!=='pendente' && Number(e.valor)>0; });
+  var partes = [];
+  if(servico){
+    var mesmos = fat.filter(function(e){ return (e.servico||'').trim().toLowerCase()===servico.toLowerCase(); });
+    if(mesmos.length){
+      var vs = mesmos.map(function(e){return Number(e.valor)||0;});
+      var ent = mesmos.filter(function(e){return Number(e.entregas)>0;});
+      var porEnt = ent.length ? sum(ent.map(function(e){return e.valor;}))/sum(ent.map(function(e){return e.entregas;})) : 0;
+      partes.push('📊 <b>'+escapeHtml(servico)+'</b>: vocês já fizeram '+mesmos.length+'. Média <b>'+fmtBRL(sum(vs)/vs.length)+'</b>'+
+        (vs.length>1?' (de '+fmtBRL(Math.min.apply(null,vs))+' a '+fmtBRL(Math.max.apply(null,vs))+')':'')+
+        (porEnt?' · '+fmtBRL(porEnt)+' por entrega':'')+'.');
+    } else partes.push('📊 Ainda não tem nenhum "'+escapeHtml(servico)+'" registrado pra comparar.');
+  }
+  var mesmoEsc = fat.filter(function(e){ return escopoDe(e)===esc && Number(e.entregas)>0; });
+  if(mesmoEsc.length){
+    var pe = sum(mesmoEsc.map(function(e){return e.valor;}))/sum(mesmoEsc.map(function(e){return e.entregas;}));
+    partes.push(ESCOPO_NOME[esc]+': em média <b>'+fmtBRL(pe)+'</b> por entrega ('+mesmoEsc.length+' trabalho'+(mesmoEsc.length>1?'s':'')+').');
+  }
+  box.innerHTML = partes.length ? '<div class="calc-hist">'+partes.join('<br>')+'</div>' : '';
+}
+function calcTextoCliente(){
+  var c = calcUltimo; if(!c) return '';
+  var l = ['Orçamento — '+(c.servico||'Produção audiovisual')+' · Estúdio VBO', ''];
+  if(c.horas) l.push('• Captação: '+c.horas+'h'+(c.pessoas>1?' com 2 profissionais':''));
+  if(c.videos) l.push('• '+c.videos+' vídeo'+(c.videos>1?'s':'')+' editado'+(c.videos>1?'s':''));
+  if(c.curtos) l.push('• '+c.curtos+' vídeo'+(c.curtos>1?'s':'')+' curto'+(c.curtos>1?'s':'')+' (reels/stories)');
+  if(c.fotos) l.push('• '+c.fotos+' fotos editadas');
+  if(c.revs) l.push('• '+c.revs+' rodada'+(c.revs>1?'s':'')+' extra'+(c.revs>1?'s':'')+' de revisão');
+  if(c.urgente) l.push('• Entrega em prazo reduzido');
+  l.push('', 'Investimento: '+fmtBRL(c.valor));
+  return l.join('\n');
+}
+function calcResumoNotas(){
+  var c = calcUltimo; if(!c) return '';
+  var p = [];
+  if(c.horas) p.push(c.horas+'h captação'+(c.pessoas>1?' (2 pessoas)':''));
+  if(c.videos) p.push(c.videos+' vídeo(s)');
+  if(c.curtos) p.push(c.curtos+' reels');
+  if(c.fotos) p.push(c.fotos+' fotos');
+  if(c.revs) p.push(c.revs+' revisões extras');
+  if(c.urgente) p.push('urgente');
+  return 'Orçamento calculado: '+fmtBRL(c.valor)+(p.length?' — '+p.join(', '):'');
+}
+['calc-horas','calc-pessoas','calc-videos','calc-curtos','calc-fotos','calc-revisoes','calc-km','calc-extras','calc-urgente','calc-servico'].forEach(function(id){
+  var el = document.getElementById(id);
+  el.addEventListener('input', recalc); el.addEventListener('change', recalc);
+});
+document.querySelectorAll('input[name="calc-escopo"]').forEach(function(r){ r.addEventListener('change', recalc); });
+document.querySelectorAll('[data-preco]').forEach(function(inp){
+  inp.addEventListener('change', function(){
+    var v = parseFloat(inp.value);
+    state.precos = Object.assign({}, state.precos||{});
+    state.precos[inp.dataset.preco] = isNaN(v) ? PRECOS_PADRAO[inp.dataset.preco] : v;
+    saveState(); recalc();
+  });
+});
+document.getElementById('btn-calc-quadro').addEventListener('click', function(){ openCalc(null); });
+document.getElementById('btn-card-calc').addEventListener('click', function(){ openCalc('card'); });
+document.getElementById('btn-calc-fechar').addEventListener('click', function(){ closeModal('modal-calc'); });
+document.getElementById('btn-calc-copiar').addEventListener('click', function(){
+  if(!calcUltimo || !calcUltimo.valor){ toast('Preencha o orçamento primeiro'); return; }
+  compartilharTexto(calcTextoCliente(), '📋 Texto copiado — é só colar no WhatsApp');
+});
+document.getElementById('btn-calc-usar').addEventListener('click', function(){
+  var c = calcUltimo;
+  if(!c || !c.valor){ toast('Preencha o orçamento primeiro'); return; }
+  closeModal('modal-calc');
+  if(calcOrigem==='card'){
+    document.getElementById('card-valor').value = c.valor;
+    if(c.servico) document.getElementById('card-servico').value = c.servico;
+    setRadio('card-escopo', c.escopo);
+    if(c.entregas) document.getElementById('card-entregas').value = c.entregas;
+    var notas = document.getElementById('card-notas');
+    notas.value = (notas.value ? notas.value.replace(/\n?Orçamento calculado:.*$/m,'') + '\n' : '') + calcResumoNotas();
+    notas.value = notas.value.replace(/^\n+/,'');
+    toast('Valor aplicado no cartão — é só salvar');
+  } else {
+    switchTab('quadro');
+    openCardModal(null, 'orcando', {prefill:{valor:c.valor, servico:c.servico, escopo:c.escopo, entregas:c.entregas, notas:calcResumoNotas()}});
+  }
+});
+
 applyTheme();
 renderAll();
 document.addEventListener('mouseover', function(e){
