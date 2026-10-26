@@ -588,6 +588,21 @@ main.view.active{display:block;}
 details.precos{background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 12px;margin:10px 0 14px;}
 details.precos summary{font-weight:600;font-size:13.5px;cursor:pointer;}
 details.precos .calc-grid{margin-top:10px;}
+/* v5 — pagamento dividido */
+.parc-row{display:grid;grid-template-columns:1fr 92px 120px 34px;gap:6px;align-items:center;margin-top:8px;}
+.parc-row input[type=text],.parc-row input[type=number],.parc-row input[type=date]{width:100%;min-height:40px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);padding:0 8px;font-size:13px;color:var(--text);}
+.parc-row .chk{display:flex;align-items:center;justify-content:center;height:40px;border-radius:10px;border:1.5px solid var(--border);cursor:pointer;font-size:15px;position:relative;}
+.parc-row .chk input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;}
+.parc-row .chk.on{border-color:var(--success);background:var(--success-soft);}
+.parc-head{display:grid;grid-template-columns:1fr 92px 120px 34px;gap:6px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-faint);margin-top:10px;}
+.parc-foot{display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-top:8px;color:var(--text-muted);}
+.parc-foot.erro{color:var(--danger);font-weight:600;}
+.parc-foot button{border:none;background:none;color:var(--accent);font-weight:600;font-size:12.5px;padding:4px 0;}
+.parc-del{border:none;background:none;color:var(--text-faint);font-size:16px;padding:0 2px;}
+.pago-bar{height:5px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-top:5px;width:90px;margin-left:auto;}
+.pago-bar i{display:block;height:100%;background:var(--success);}
+.badge.atrasado{background:var(--danger-soft);color:var(--danger);}
+.badge.areceber{background:var(--info-soft);color:var(--info);}
 ::-webkit-scrollbar{width:0;height:0;}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
 </style>
@@ -920,6 +935,15 @@ details.precos .calc-grid{margin-top:10px;}
         <input type="number" step="0.01" min="0" id="evento-valor" placeholder="0,00">
         <div class="field-error">Informe um valor válido.</div>
       </div>
+      <div class="field" id="field-evento-pagto">
+        <label>Pagamento</label>
+        <div class="status-picker small">
+          <label class="opt-esc"><input type="radio" name="evento-pagto" value="avista">De uma vez</label>
+          <label class="opt-esc"><input type="radio" name="evento-pagto" value="50-50">50% + 50%</label>
+          <label class="opt-esc"><input type="radio" name="evento-pagto" value="custom">Outra divisão</label>
+        </div>
+        <div id="parcelas-editor"></div>
+      </div>
       <div class="field">
         <label>Status</label>
         <div class="status-picker">
@@ -1231,6 +1255,15 @@ details.precos .calc-grid{margin-top:10px;}
           <input type="number" step="0.01" min="0" id="card-valor" placeholder="0,00" style="flex:1;">
           <button type="button" class="btn btn-sm" id="btn-card-calc" style="min-height:48px;">🧮 Calcular</button>
         </div>
+      </div>
+      <div class="field">
+        <label for="card-pagto">Pagamento</label>
+        <select id="card-pagto">
+          <option value="avista">De uma vez</option>
+          <option value="50-50">50% no fechamento + 50% na entrega</option>
+          <option value="custom" disabled>Outra divisão (edite no evento da agenda)</option>
+        </select>
+        <div class="hint" id="card-pagto-hint"></div>
       </div>
       <div class="field">
         <label>Responsável</label>
@@ -1627,7 +1660,7 @@ function saldoAtualCaixa(){
   // Dinheiro real em caixa: saldo inicial + tudo que já foi recebido − tudo
   // que já foi pago (histórico completo). Dinheiro investido NÃO entra aqui
   // de propósito — investimentos são tratados como "fora do caixa".
-  var totalRecebidoGeral = sum(state.eventos.filter(function(e){return isTrabalho(e) && e.status==='recebido';}).map(function(e){return e.valor;}));
+  var totalRecebidoGeral = sum(state.eventos.map(valorRecebido));
   var totalPagoGeral = sum(despesasLista().filter(function(d){return d.paga;}).map(function(d){return d.valor;}));
   return (Number(state.saldoInicial)||0) + totalRecebidoGeral - totalPagoGeral;
 }
@@ -1644,12 +1677,87 @@ function totalInvestidoPorPessoa(){
   return out;
 }
 
+/* ============================================================
+   PAGAMENTO DIVIDIDO (v5)
+   evento.parcelas = [{id, rotulo, valor, data, recebido, recebidoEm, naEntrega}]
+   evento.pagto = 'avista' | '50-50' | 'custom'
+   - Com parcelas, o que conta como recebido é a soma das parcelas pagas.
+   - "Restante" com naEntrega acompanha a entrega do cartão no Quadro.
+   - Status: pendente continua pendente (orçamento); senão vira
+     "recebido" sozinho quando todas as parcelas estiverem pagas.
+============================================================ */
+function temParcelas(e){ return Array.isArray(e.parcelas) && e.parcelas.length>0; }
+function valorRecebido(e){
+  if(!isTrabalho(e) || e.status==='pendente') return 0;
+  if(temParcelas(e)) return sum(e.parcelas.filter(function(p){return p.recebido;}).map(function(p){return p.valor;}));
+  return e.status==='recebido' ? (Number(e.valor)||0) : 0;
+}
+function valorAReceber(e){
+  if(!isTrabalho(e) || e.status==='pendente') return 0;
+  return Math.max(0, (Number(e.valor)||0) - valorRecebido(e));
+}
+function derivarStatus(e){
+  if(!temParcelas(e) || e.status==='pendente') return;
+  e.status = e.parcelas.every(function(p){ return p.recebido; }) ? 'recebido' : 'confirmado';
+}
+function round2(v){ return Math.round((Number(v)||0)*100)/100; }
+function parcelas5050(total, dataSinal, dataRestante, antigas){
+  antigas = antigas || [];
+  var a = antigas[0], b = antigas[1];
+  var sinal = (a && a.recebido) ? round2(a.valor) : round2(total/2);
+  return [
+    {id: a&&a.id || uid(), rotulo:'Sinal', valor:sinal, data:(a&&a.data)||dataSinal||todayISO(), recebido:!!(a&&a.recebido), recebidoEm:a&&a.recebidoEm||''},
+    {id: b&&b.id || uid(), rotulo:'Na entrega', valor:round2(total-sinal), data:(b&&b.data)||dataRestante||'', recebido:!!(b&&b.recebido), recebidoEm:b&&b.recebidoEm||'', naEntrega:true}
+  ];
+}
+function recebiveis(filtro){
+  var out = [];
+  state.eventos.forEach(function(e){
+    if(!isTrabalho(e) || !passaFiltro(e, filtro||'todos')) return;
+    if(e.status==='recebido') return;
+    if(e.status!=='pendente' && temParcelas(e)){
+      e.parcelas.forEach(function(p, i){ if(!p.recebido) out.push({e:e, p:p, i:i, data:p.data||e.data}); });
+    } else out.push({e:e, data:e.data});
+  });
+  return out.sort(function(a,b){ return (a.data||'').localeCompare(b.data||''); });
+}
+function rowRecebivel(x){
+  var e = x.e, p = x.p, hoje = todayISO();
+  if(!p) return rowEvento(e);
+  var atras = x.data && x.data < hoje;
+  var n = e.parcelas.length;
+  var pagos = e.parcelas.filter(function(q){return q.recebido;}).length;
+  return '<div class="row" data-receber="'+e.id+':'+p.id+'">'+
+    '<div class="stripe p-'+respKey(e)+'"></div>'+
+    '<div class="row-body">'+
+      '<div class="row-title">'+escapeHtml(e.titulo||'Sem título')+'</div>'+
+      '<div class="row-sub">💰 '+(x.data?fmtDateShort(x.data):(p.naEntrega?'na entrega':'sem data'))+' · '+escapeHtml(p.rotulo||('Parcela '+(x.i+1)))+' ('+(x.i+1)+'/'+n+')'+(pagos?' · '+pagos+' pago':'')+'</div>'+
+    '</div>'+
+    '<div style="text-align:right;">'+
+      '<div class="row-value">'+fmtBRL(p.valor)+'</div>'+
+      '<span class="badge '+(atras?'atrasado':'areceber')+'" style="margin-top:4px;">'+(atras?'Atrasado':'A receber')+'</span>'+
+    '</div>'+
+  '</div>';
+}
+function marcarParcela(eid, pid){
+  var e = state.eventos.find(function(x){ return x.id===eid; });
+  if(!e || !temParcelas(e)) return;
+  var p = e.parcelas.find(function(q){ return q.id===pid; });
+  if(!p) return;
+  showConfirm('Recebeu?', 'Marcar "'+(p.rotulo||'parcela')+'" de '+(e.titulo||'')+' ('+fmtBRL(p.valor)+') como recebido hoje?', function(){
+    p.recebido = true; p.recebidoEm = todayISO();
+    derivarStatus(e);
+    saveState(); renderAll();
+    toast(e.status==='recebido' ? '✅ Tudo recebido: '+(e.titulo||'') : '💰 '+(p.rotulo||'Parcela')+' recebido · falta '+fmtBRL(valorAReceber(e)));
+  });
+}
+
 function computeFinancials(y,m){
   var evs = eventosDoMes(y,m).filter(isTrabalho);
   var desp = despesasDoMes(y,m);
-  var confirmado = sum(evs.filter(function(e){return e.status==='confirmado';}).map(function(e){return e.valor;}));
+  var confirmado = sum(evs.map(valorAReceber));
   var pendente   = sum(evs.filter(function(e){return e.status==='pendente';}).map(function(e){return e.valor;}));
-  var recebidoMes= sum(evs.filter(function(e){return e.status==='recebido';}).map(function(e){return e.valor;}));
+  var recebidoMes= sum(evs.map(valorRecebido));
   var despesasPagas = sum(desp.filter(function(d){return d.paga;}).map(function(d){return d.valor;}));
   var despesasAPagar = sum(desp.filter(function(d){return !d.paga;}).map(function(d){return d.valor;}));
   var totalDespesas = despesasPagas + despesasAPagar;
@@ -1825,7 +1933,8 @@ function itensDoDia(iso){
   var evs = state.eventos.filter(function(e){ return e.data===iso; }).sort(cmpEvento);
   var ent = state.cards.filter(function(c){ return c.dataEntrega===iso && c.coluna!=='entregue'; });
   var contas = despesasLista().filter(function(d){ return d.vencimento===iso && !d.paga; });
-  return {eventos:evs, entregas:ent, contas:contas};
+  var receber = recebiveis('todos').filter(function(x){ return x.p && x.data===iso; });
+  return {eventos:evs, entregas:ent, contas:contas, receber:receber};
 }
 function renderToday(){
   var iso = todayISO();
@@ -1834,7 +1943,8 @@ function renderToday(){
   var amanha = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1);
   var isoAm = isoFromParts(amanha.getFullYear(), amanha.getMonth(), amanha.getDate());
   var am = itensDoDia(isoAm);
-  var total = it.eventos.length + it.entregas.length + it.contas.length;
+  var atrasados = recebiveis('todos').filter(function(x){ return x.p && x.data && x.data < iso; });
+  var total = it.eventos.length + it.entregas.length + it.contas.length + it.receber.length + atrasados.length;
   var html = '';
   if(total){
     html += '<div class="today-card"><div class="t-head"><strong>Hoje</strong><span>'+DIAS_SEMANA[d.getDay()]+', '+d.getDate()+' de '+MESES[d.getMonth()].toLowerCase()+'</span></div>';
@@ -1846,6 +1956,11 @@ function renderToday(){
     it.entregas.forEach(function(c){
       html += '<div class="t-item" data-open-card="'+c.id+'" style="--p:var(--warning)"><div class="t-time">📦</div><div class="t-bar"></div><div style="flex:1;min-width:0;">'+
         '<div class="t-title">Entrega: '+escapeHtml(c.titulo||'')+'</div><div class="t-sub">'+escapeHtml(c.cliente||'')+' · '+escapeHtml(COLUNA_NOME[c.coluna]||'')+'</div></div></div>';
+    });
+    it.receber.concat(atrasados).forEach(function(x){
+      var atr = x.data < iso;
+      html += '<div class="t-item" data-receber="'+x.e.id+':'+x.p.id+'" style="--p:var(--success)"><div class="t-time">💰</div><div class="t-bar"></div><div style="flex:1;min-width:0;">'+
+        '<div class="t-title">'+(atr?'Cobrar (atrasado): ':'Receber hoje: ')+escapeHtml(x.p.rotulo||'parcela')+'</div><div class="t-sub">'+escapeHtml(x.e.titulo||'')+' · '+fmtBRL(x.p.valor)+(atr?' · venceu '+fmtDateShort(x.data):'')+' · toque pra marcar recebido</div></div></div>';
     });
     it.contas.forEach(function(x){
       html += '<div class="t-item" '+(x.isFatura?'data-open-fatura="'+x.faturaId+'"':'data-open-despesa="'+x.id+'"')+' style="--p:var(--danger)"><div class="t-time">💸</div><div class="t-bar"></div><div style="flex:1;min-width:0;">'+
@@ -1871,8 +1986,8 @@ function renderDashboard(){
   renderChips('dash-person-chips', personFilter, 'data-pessoa');
   var f = computeFinancials(viewYear, viewMonth);
   var evsF = eventosDoMes(viewYear, viewMonth).filter(function(e){ return isTrabalho(e) && passaFiltro(e, personFilter); });
-  var recebido = sum(evsF.filter(function(e){return e.status==='recebido';}).map(function(e){return e.valor;}));
-  var confirmado = sum(evsF.filter(function(e){return e.status==='confirmado';}).map(function(e){return e.valor;}));
+  var recebido = sum(evsF.map(valorRecebido));
+  var confirmado = sum(evsF.map(valorAReceber));
   var pendente = sum(evsF.filter(function(e){return e.status==='pendente';}).map(function(e){return e.valor;}));
   var faturado = recebido + confirmado;
   var quem = personFilter==='todos' ? '' : ' · '+PESSOA_NOME[personFilter];
@@ -1922,10 +2037,8 @@ function renderDashboard(){
   document.getElementById('dash-list-entregas').innerHTML = entregas.length ? entregas.slice(0,5).map(rowEntrega).join('') :
     '<div class="empty-state">Nenhuma entrega com data. Cadastre no Quadro.</div>';
 
-  var receber = state.eventos.filter(function(e){ return isTrabalho(e) && e.status!=='recebido' && passaFiltro(e, personFilter); })
-    .sort(cmpEvento)
-    .slice(0,6);
-  document.getElementById('dash-list-receber').innerHTML = receber.length ? receber.map(rowEvento).join('') :
+  var receber = recebiveis(personFilter).slice(0,8);
+  document.getElementById('dash-list-receber').innerHTML = receber.length ? receber.map(rowRecebivel).join('') :
     '<div class="empty-state">Nenhum recebimento pendente'+(quem?' para '+PESSOA_NOME[personFilter]:'')+'.</div>';
 
   var pagar = despesasLista().filter(function(d){ return !d.paga; })
@@ -2060,12 +2173,17 @@ function rowEvento(e){
   subParts.push(e.hora ? e.hora : periodoLabel(e.periodo));
   subParts.push(pessoaTexto(e));
   if(!isPessoal && e.cliente) subParts.push(escapeHtml(e.cliente));
+  if(!isPessoal && temParcelas(e) && e.status!=='pendente'){
+    var pg = e.parcelas.filter(function(q){return q.recebido;}).length;
+    subParts.push('💰 '+pg+'/'+e.parcelas.length+' pago');
+  }
   var cardLig = isPessoal ? null : cardDoEvento(e.id);
   if(cardLig) subParts.push('🗂️ '+(COLUNA_NOME[cardLig.coluna]||''));
   var rightBlock = isPessoal
     ? '<span class="badge pessoal">Pessoal</span>'
     : ('<div class="row-value '+sign+'">'+fmtBRL(e.valor)+'</div>'+
-       '<span class="badge '+e.status+'" style="margin-top:4px;">'+statusLabel(e.status)+'</span>');
+       '<span class="badge '+e.status+'" style="margin-top:4px;">'+statusLabel(e.status)+'</span>'+
+       ((temParcelas(e) && e.status==='confirmado') ? '<div class="pago-bar" title="'+fmtBRL(valorRecebido(e))+' recebido"><i style="width:'+Math.round(valorRecebido(e)/(Number(e.valor)||1)*100)+'%"></i></div>' : ''));
   return '<div class="row" data-open-evento="'+e.id+'">'+
     '<div class="stripe '+(isPessoal?'pessoal':'p-'+respKey(e))+'"></div>'+
     '<div class="row-body">'+
@@ -2254,6 +2372,7 @@ function renderDayPanel(){
   var corpo = '';
   if(it.eventos.length) corpo += '<div class="list">'+it.eventos.map(rowEvento).join('')+'</div>';
   if(it.entregas.length) corpo += '<div class="list" style="margin-top:8px;">'+it.entregas.map(rowEntrega).join('')+'</div>';
+  if(it.receber.length) corpo += '<div class="list" style="margin-top:8px;">'+it.receber.map(rowRecebivel).join('')+'</div>';
   if(it.contas.length) corpo += '<div class="list" style="margin-top:8px;">'+it.contas.map(rowDespesa).join('')+'</div>';
   if(!corpo) corpo = '<div class="empty-state" style="padding:18px;">Dia livre — nada marcado.</div>';
   document.getElementById('agenda-day-panel').innerHTML =
@@ -2315,6 +2434,8 @@ function renderQuadro(){
         '<div class="k-meta"><span class="k-who p-'+respKey(c)+'" title="'+PESSOA_NOME[respKey(c)]+'"></span>'+
           '<span class="k-tag">'+escapeHtml(c.servico || (escopoDe(c)==='edicao'?'Só edição':(TIPO_NOME[c.tipo]||'Outro')))+'</span>'+
           (c.entregas?'<span class="k-tag">'+c.entregas+' entrega'+(c.entregas>1?'s':'')+'</span>':'')+
+          (function(){ var ev = eventoDoCard(c); if(ev && temParcelas(ev) && ev.status!=='pendente'){ var pg = ev.parcelas.filter(function(p){return p.recebido;}).length; return '<span class="k-tag" style="'+(pg===ev.parcelas.length?'background:var(--success-soft);color:var(--success)':'')+'">💰 '+pg+'/'+ev.parcelas.length+'</span>'; }
+            return c.pagamento==='50-50' ? '<span class="k-tag">50/50</span>' : ''; })()+
           (c.dataEvento?'<span class="k-date" title="Data do trabalho">'+(c.eventoId?'📅 ':'🗓 ')+fmtDateShort(c.dataEvento)+'</span>':'')+
           (st.txt?'<span class="k-date '+st.cls+'" title="Entrega">📦 '+st.txt+'</span>':'')+
           (Number(c.valor)?'<span class="k-val">'+fmtCompact(c.valor)+'</span>':'')+
@@ -2355,18 +2476,21 @@ function syncEventoFromCard(c){
     e.responsavel = c.responsavel || e.responsavel;
     if(Number(c.valor)) e.valor = Number(c.valor);
     if(c.dataEvento) e.data = c.dataEvento;
+    aplicarPagtoDoCard(c, e);
     if(c.servico) e.servico = c.servico;
     if(c.escopo) e.escopo = c.escopo;
     if(c.entregas) e.entregas = c.entregas;
     if(c.coluna==='orcando'){ if(e.status==='confirmado') e.status = 'pendente'; }
     else if(e.status==='pendente') e.status = 'confirmado';
+    derivarStatus(e);
     return 'atualizado';
   }
   if(c.coluna==='fechado' && c.dataEvento && !c.semEvento){
     var ne = { id: uid(), tipo:'trabalho', titulo: c.titulo, cliente: c.cliente||'', data: c.dataEvento,
       periodo:'dia-inteiro', hora:'', valor: Number(c.valor)||0, status:'confirmado',
       responsavel: c.responsavel||'ambos', local:'', notas: c.notas||'',
-      servico: c.servico||'', escopo: escopoDe(c), entregas: c.entregas||0 };
+      servico: c.servico||'', escopo: escopoDe(c), entregas: c.entregas||0, pagto:'avista' };
+    aplicarPagtoDoCard(c, ne);
     state.eventos.push(ne);
     c.eventoId = ne.id;
     return 'criado';
@@ -2383,8 +2507,24 @@ function syncCardFromEvento(e){
   if(e.servico) c.servico = e.servico;
   if(e.escopo) c.escopo = e.escopo;
   if(e.entregas) c.entregas = e.entregas;
+  c.pagamento = e.pagto || (temParcelas(e) ? 'custom' : 'avista');
   if(c.coluna==='orcando' && e.status!=='pendente') c.coluna = 'fechado';
   else if(c.coluna==='fechado' && e.status==='pendente') c.coluna = 'orcando';
+}
+function aplicarPagtoDoCard(c, e){
+  var pag = c.pagamento || '';
+  var dataRest = c.entregueEm || c.dataEntrega || '';
+  if(pag==='50-50'){
+    if(e.pagto==='custom' && temParcelas(e)) return; // divisão personalizada feita na agenda: não mexe
+    e.pagto = '50-50';
+    e.parcelas = parcelas5050(Number(e.valor)||0, null, dataRest, temParcelas(e) ? e.parcelas : null);
+    if(dataRest) e.parcelas[1].data = dataRest;
+  } else if(pag==='avista'){
+    // só desfaz a divisão 50/50 automática, e só se nada foi recebido ainda
+    if(e.pagto==='50-50' && temParcelas(e) && !e.parcelas.some(function(p){return p.recebido;})){ e.parcelas = []; e.pagto = 'avista'; }
+  } else if(temParcelas(e)){
+    e.parcelas.forEach(function(p){ if(p.naEntrega && dataRest) p.data = dataRest; });
+  }
 }
 function avisoSync(res, c){
   if(res==='criado') toast('📅 Evento confirmado na agenda · '+fmtDateShort(c.dataEvento));
@@ -2404,7 +2544,9 @@ function moverCard(id, coluna){
   if(coluna==='entregue') c.entregueEm = todayISO(); else delete c.entregueEm;
   var res = syncEventoFromCard(c);
   saveState(); renderAll();
-  avisoSync(res, c);
+  var evc = eventoDoCard(c);
+  if(coluna==='entregue' && evc && valorAReceber(evc)>0) toast('📦 Entregue! Falta receber '+fmtBRL(valorAReceber(evc))+' — já está no Painel');
+  else avisoSync(res, c);
 }
 
 var editingCardId = null;
@@ -2433,6 +2575,13 @@ function openCardModal(id, coluna, opts){
   document.getElementById('card-coluna').value = col;
   document.getElementById('card-servico').value = c ? (c.servico||'') : '';
   document.getElementById('card-entregas').value = c && c.entregas ? c.entregas : '';
+  var evPag = c ? eventoDoCard(c) : null;
+  var pagC = c ? (c.pagamento || (evPag ? (evPag.pagto || (temParcelas(evPag)?'custom':'avista')) : 'avista')) : 'avista';
+  document.getElementById('card-pagto').value = pagC;
+  var hintP = '';
+  if(evPag && temParcelas(evPag)) hintP = '💰 '+fmtBRL(valorRecebido(evPag))+' de '+fmtBRL(evPag.valor)+' recebido · '+evPag.parcelas.filter(function(p){return p.recebido;}).length+'/'+evPag.parcelas.length+' parcelas';
+  else hintP = 'No 50/50, o sinal vence no fechamento e o restante na data de entrega.';
+  document.getElementById('card-pagto-hint').textContent = hintP;
   setRadio('card-escopo', c ? escopoDe(c) : (col==='edicao'?'edicao':'completo'));
   document.getElementById('card-valor').value = c && c.valor ? c.valor : '';
   document.getElementById('card-data-evento').value = c ? (c.dataEvento||'') : '';
@@ -2522,6 +2671,7 @@ function lerCardForm(){
     servico: document.getElementById('card-servico').value.trim(),
     escopo: getRadio('card-escopo') || 'completo',
     entregas: parseInt(document.getElementById('card-entregas').value,10) || 0,
+    pagamento: document.getElementById('card-pagto').value || 'avista',
     valor: isNaN(v) ? 0 : v,
     dataEvento: document.getElementById('card-data-evento').value,
     dataEntrega: document.getElementById('card-entrega').value,
@@ -2575,7 +2725,7 @@ document.getElementById('btn-card-evento').addEventListener('click', function(){
   openEventoModal(null, c.dataEvento || c.dataEntrega || '', {
     titulo: c.titulo, cliente: c.cliente, valor: c.valor || '', responsavel: respKey(c),
     status: c.coluna==='orcando' ? 'pendente' : 'confirmado', notas: c.notas,
-    servico: c.servico, escopo: escopoDe(c), entregas: c.entregas
+    servico: c.servico, escopo: escopoDe(c), entregas: c.entregas, pagamento: c.pagamento
   });
 });
 var pendingCardLink = null;
@@ -2802,6 +2952,9 @@ function openEventoModal(id, prefillDate, prefill){
     document.getElementById('evento-servico').value = e.servico||'';
     document.getElementById('evento-entregas').value = e.entregas||'';
     setRadio('evento-escopo', escopoDe(e));
+    parcelasEdit = temParcelas(e) ? JSON.parse(JSON.stringify(e.parcelas)) : [];
+    statusAoAbrir = e.status;
+    setRadio('evento-pagto', temParcelas(e) ? (e.pagto==='50-50'?'50-50':'custom') : 'avista');
     var radioTipo = document.querySelector('input[name="evento-tipo"][value="'+(e.tipo||'trabalho')+'"]');
     if(radioTipo) radioTipo.checked = true;
     var radioPeriodo = document.querySelector('input[name="evento-periodo"][value="'+(e.periodo||'dia-inteiro')+'"]');
@@ -2825,6 +2978,9 @@ function openEventoModal(id, prefillDate, prefill){
     document.getElementById('evento-servico').value = pf.servico || '';
     document.getElementById('evento-entregas').value = pf.entregas || '';
     setRadio('evento-escopo', pf.escopo || 'completo');
+    parcelasEdit = [];
+    statusAoAbrir = null;
+    setRadio('evento-pagto', 'avista');
     var rTipo = document.querySelector('input[name="evento-tipo"][value="trabalho"]');
     if(rTipo) rTipo.checked = true;
     var rPeriodo = document.querySelector('input[name="evento-periodo"][value="dia-inteiro"]');
@@ -2839,6 +2995,7 @@ function openEventoModal(id, prefillDate, prefill){
   }
   updateStatusPickerClasses();
   updateEventoTipoUI();
+  if(!id && prefill && prefill.pagamento==='50-50') setPagtoEdit('50-50', null); else renderParcelasEditor();
   openModal('modal-evento');
 }
 /* ---- tipo de trabalho / escopo / entregas (v4) ---- */
@@ -2877,11 +3034,81 @@ function renderEventoQuadroBox(e){
     ? '<div class="link-box"><div><b>🗂️ No Quadro · '+escapeHtml(COLUNA_NOME[c.coluna]||'')+'</b><span>'+(c.dataEntrega?'entrega '+fmtDateShort(c.dataEntrega):'sem data de entrega')+'</span></div><button type="button" data-evento-to-card="'+c.id+'">Abrir</button></div>'
     : '<button type="button" class="add-btn" style="margin:0 0 14px;" data-evento-novo-card="'+e.id+'">🗂️ Criar cartão no Quadro (edição, entrega…)</button>';
 }
+
+/* ---- editor de parcelas no modal do evento (v5) ---- */
+var parcelasEdit = [];
+var statusAoAbrir = null;
+function eventoValorAtual(){ var v = parseFloat(document.getElementById('evento-valor').value); return isNaN(v) ? 0 : v; }
+function dataRestantePadrao(){
+  var c = editingEventoId ? cardDoEvento(editingEventoId) : (pendingCardLink ? state.cards.find(function(x){return x.id===pendingCardLink;}) : null);
+  return (c && (c.entregueEm || c.dataEntrega)) || document.getElementById('evento-data').value || '';
+}
+function setPagtoEdit(modo, e){
+  setRadio('evento-pagto', modo);
+  if(modo==='avista') parcelasEdit = [];
+  else if(modo==='50-50') parcelasEdit = parcelas5050(eventoValorAtual(), todayISO(), dataRestantePadrao(), (e && temParcelas(e)) ? e.parcelas : (parcelasEdit.length?parcelasEdit:null));
+  else if(!parcelasEdit.length) parcelasEdit = parcelas5050(eventoValorAtual(), todayISO(), dataRestantePadrao(), null);
+  renderParcelasEditor();
+}
+function renderParcelasEditor(){
+  var box = document.getElementById('parcelas-editor');
+  var modo = getRadio('evento-pagto') || 'avista';
+  if(modo==='avista' || !parcelasEdit.length){ box.innerHTML = ''; return; }
+  var custom = modo==='custom';
+  var total = eventoValorAtual();
+  var soma = round2(sum(parcelasEdit.map(function(p){return p.valor;})));
+  var html = '<div class="parc-head"><span>Parcela</span><span>Valor</span><span>Vence</span><span title="Recebido">✓</span></div>';
+  parcelasEdit.forEach(function(p, i){
+    html += '<div class="parc-row">'+
+      '<input type="text" data-parc="'+i+'" data-campo="rotulo" value="'+escapeHtml(p.rotulo||'')+'"'+(custom?'':' readonly')+'>'+
+      '<input type="number" step="0.01" min="0" data-parc="'+i+'" data-campo="valor" value="'+(p.valor||'')+'"'+(custom?'':' readonly')+'>'+
+      '<input type="date" data-parc="'+i+'" data-campo="data" value="'+(p.data||'')+'">'+
+      '<label class="chk'+(p.recebido?' on':'')+'" title="Recebido"><input type="checkbox" data-parc="'+i+'" data-campo="recebido"'+(p.recebido?' checked':'')+'>'+(p.recebido?'✅':'⬜')+'</label>'+
+    '</div>';
+  });
+  var ok = Math.abs(soma-total) < 0.01;
+  html += '<div class="parc-foot'+(ok?'':' erro')+'"><span>'+(ok ? 'Soma: '+fmtBRL(soma)+' ✓' : 'Soma '+fmtBRL(soma)+' ≠ valor '+fmtBRL(total))+'</span>'+
+    (custom ? '<span><button type="button" data-parc-add>+ parcela</button>'+(parcelasEdit.length>1?' · <button type="button" data-parc-del>− última</button>':'')+(ok?'':' · <button type="button" data-parc-ajustar>ajustar última</button>')+'</span>' : '')+'</div>';
+  if(!custom) html += '<div class="hint">O restante acompanha a data de entrega do cartão no Quadro. Marque ✓ quando o dinheiro cair.</div>';
+  box.innerHTML = html;
+}
+document.querySelectorAll('input[name="evento-pagto"]').forEach(function(r){
+  r.addEventListener('change', function(){ setPagtoEdit(r.value, null); });
+});
+document.getElementById('evento-valor').addEventListener('input', function(){
+  var modo = getRadio('evento-pagto');
+  if(modo==='50-50'){ parcelasEdit = parcelas5050(eventoValorAtual(), todayISO(), dataRestantePadrao(), parcelasEdit); }
+  renderParcelasEditor();
+});
+document.getElementById('parcelas-editor').addEventListener('input', function(ev){
+  var el = ev.target, i = el.dataset.parc; if(i==null) return;
+  var p = parcelasEdit[parseInt(i,10)]; if(!p) return;
+  var campo = el.dataset.campo;
+  if(campo==='recebido'){ p.recebido = el.checked; p.recebidoEm = el.checked ? (p.recebidoEm||todayISO()) : ''; renderParcelasEditor(); return; }
+  if(campo==='valor'){ p.valor = round2(el.value); }
+  else p[campo] = el.value;
+  if(campo==='valor'){ // atualiza só o rodapé da soma
+    var foot = document.querySelector('#parcelas-editor .parc-foot');
+    var soma = round2(sum(parcelasEdit.map(function(q){return q.valor;}))), total = eventoValorAtual();
+    if(foot){ var ok = Math.abs(soma-total)<0.01; foot.classList.toggle('erro', !ok); foot.firstChild.textContent = ok ? 'Soma: '+fmtBRL(soma)+' ✓' : 'Soma '+fmtBRL(soma)+' ≠ valor '+fmtBRL(total); }
+  }
+});
+document.getElementById('parcelas-editor').addEventListener('change', function(ev){
+  if(ev.target.dataset.campo==='valor') renderParcelasEditor();
+});
+document.getElementById('parcelas-editor').addEventListener('click', function(ev){
+  var t = ev.target;
+  if(t.closest('[data-parc-add]')){ var resto = round2(eventoValorAtual() - sum(parcelasEdit.map(function(q){return q.valor;}))); parcelasEdit.push({id:uid(), rotulo:'Parcela '+(parcelasEdit.length+1), valor:Math.max(0,resto), data:'', recebido:false}); renderParcelasEditor(); }
+  else if(t.closest('[data-parc-del]')){ parcelasEdit.pop(); renderParcelasEditor(); }
+  else if(t.closest('[data-parc-ajustar]')){ var last = parcelasEdit[parcelasEdit.length-1]; last.valor = round2(eventoValorAtual() - sum(parcelasEdit.slice(0,-1).map(function(q){return q.valor;}))); renderParcelasEditor(); }
+});
+
 function updateEventoTipoUI(){
   var tipoEl = document.querySelector('input[name="evento-tipo"]:checked');
   var isPessoal = tipoEl ? tipoEl.value==='pessoal' : false;
   document.getElementById('field-evento-valor').style.display = isPessoal ? 'none' : '';
   document.getElementById('evento-servico-block').style.display = isPessoal ? 'none' : '';
+  document.getElementById('field-evento-pagto').style.display = isPessoal ? 'none' : '';
   document.getElementById('label-evento-titulo').textContent = isPessoal ? 'Nome do evento' : 'Nome do trabalho';
   document.getElementById('evento-titulo').placeholder = isPessoal ? 'Ex: Chá de casa nova, Aniversário…' : 'Ex: Casamento Ana & Rafa, Ensaio corporativo…';
   if(isPessoal) clearFieldError('field-evento-valor');
@@ -2934,6 +3161,15 @@ document.getElementById('form-evento').addEventListener('submit', function(ev){
   if(!data){ setFieldError('field-evento-data'); ok=false; } else clearFieldError('field-evento-data');
   if(!isPessoal && (!(valor>=0) || valorRaw==='')){ setFieldError('field-evento-valor'); ok=false; } else clearFieldError('field-evento-valor');
   if(!ok) return;
+  var modoPagto = isPessoal ? 'avista' : (getRadio('evento-pagto') || 'avista');
+  if(modoPagto!=='avista'){
+    var somaP = round2(sum(parcelasEdit.map(function(p){return p.valor;})));
+    if(Math.abs(somaP - valor) >= 0.01){
+      toast('A soma das parcelas ('+fmtBRL(somaP)+') precisa bater com o valor ('+fmtBRL(valor)+')');
+      document.getElementById('parcelas-editor').scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+  }
 
   var payload = {
     tipo: tipo,
@@ -2949,8 +3185,15 @@ document.getElementById('form-evento').addEventListener('submit', function(ev){
     notas: document.getElementById('evento-notas').value.trim(),
     servico: isPessoal ? '' : document.getElementById('evento-servico').value.trim(),
     escopo: isPessoal ? '' : (getRadio('evento-escopo') || 'completo'),
-    entregas: isPessoal ? 0 : (parseInt(document.getElementById('evento-entregas').value,10) || 0)
+    entregas: isPessoal ? 0 : (parseInt(document.getElementById('evento-entregas').value,10) || 0),
+    pagto: modoPagto,
+    parcelas: modoPagto==='avista' ? [] : parcelasEdit.map(function(p){ return {id:p.id||uid(), rotulo:p.rotulo||'', valor:round2(p.valor), data:p.data||'', recebido:!!p.recebido, recebidoEm:p.recebidoEm||'', naEntrega:!!p.naEntrega}; })
   };
+  if(payload.parcelas.length){
+    // "Recebido" escolhido à mão com parcelas em aberto = tudo pago
+    if(payload.status==='recebido' && statusAoAbrir!=='recebido') payload.parcelas.forEach(function(p){ if(!p.recebido){ p.recebido = true; p.recebidoEm = todayISO(); } });
+    derivarStatus(payload);
+  }
 
   if(editingEventoId){
     var idx = state.eventos.findIndex(function(x){return x.id===editingEventoId;});
@@ -3348,6 +3591,8 @@ document.addEventListener('click', function(e){
     return;
   }
 
+  var rcb = t.closest('[data-receber]');
+  if(rcb){ var pr = rcb.dataset.receber.split(':'); marcarParcela(pr[0], pr[1]); return; }
   var tabOpen = t.closest('[data-tab-open]');
   if(tabOpen){ switchTab(tabOpen.dataset.tabOpen); return; }
   var rp = t.closest('[data-rel-periodo]');
@@ -3590,7 +3835,7 @@ function renderRelatorios(){
   var fat = todos.filter(function(e){ return e.status!=='pendente'; });
   var pend = todos.filter(function(e){ return e.status==='pendente'; });
   var total = sum(fat.map(function(e){return e.valor;}));
-  var recebido = sum(fat.filter(function(e){return e.status==='recebido';}).map(function(e){return e.valor;}));
+  var recebido = sum(fat.map(valorRecebido));
   var comEnt = fat.filter(function(e){ return Number(e.entregas)>0; });
   var entregas = sum(comEnt.map(function(e){return e.entregas;}));
   var quem = relPessoa==='todos' ? '' : ' · '+PESSOA_NOME[relPessoa];
